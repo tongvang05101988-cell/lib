@@ -4162,7 +4162,7 @@ function NeverLose:CreateWindow(Config)
 		NeverLose.Drag(Frame , WindowFrame , 0.15)
 	end
 
-	UICorner.CornerRadius = UDim.new(0, 3)
+	UICorner.CornerRadius = UDim.new(0, 8)
 	UICorner.Parent = WindowFrame
 
 	LeftMenuFrame.Name = NeverLose.RandomString();
