@@ -1258,7 +1258,7 @@ function NeverLose:CreateOptionWindow(Frame: Frame , Zindex)
 	OptionHandler.Size = UDim2.new(0, 220, 0, 75)
 	OptionHandler.ZIndex = Zindex + 9
 
-	UICorner.CornerRadius = UDim.new(0, 10)
+	UICorner.CornerRadius = UDim.new(0, 3)
 	UICorner.Parent = OptionHandler
 
 	UIListLayout.Parent = OptionHandler
@@ -1408,7 +1408,7 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 		end;
 	end)));
 
-	UICorner.CornerRadius = UDim.new(0, 10)
+	UICorner.CornerRadius = UDim.new(0, 3)
 	UICorner.Parent = ColorPickerHandler
 
 	UIStroke.Transparency = 0.650
@@ -1496,7 +1496,7 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 	RGBLabel.TextTransparency = 0.400
 	RGBLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-	UICorner_6.CornerRadius = UDim.new(0, 4)
+	UICorner_6.CornerRadius = UDim.new(0, 3)
 	UICorner_6.Parent = RGBLabel
 
 	ColorPickerLib.SetRender = LPH_NO_VIRTUALIZE(function(value)
@@ -1911,7 +1911,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Slider.ZIndex = ZINdex + 13
 		Slider.LayoutOrder = -(#Handler:GetChildren() + 5);
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = Slider
 
 		ValueFrame.Name = NeverLose.RandomString();
@@ -1925,7 +1925,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		ValueFrame.Size = UDim2.new(0, SliderLib.MaximumSize + boxSize, 0, 18)
 		ValueFrame.ZIndex = ZINdex + 13
 
-		UICorner_2.CornerRadius = UDim.new(0, 4)
+		UICorner_2.CornerRadius = UDim.new(0, 3)
 		UICorner_2.Parent = ValueFrame
 
 		UIStroke.Transparency = 0.650
@@ -2206,7 +2206,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Icon.TextTransparency = 0.400
 		Icon.TextWrapped = true
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = Option
 
 		local Window = NeverLose:CreateOptionWindow(Option , ZINdex + 13);
@@ -2300,7 +2300,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		ColorPicker.ZIndex = ZINdex + 13
 		ColorPicker.LayoutOrder = -(#Handler:GetChildren() + 5);
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = ColorPicker
 
 		UIStroke.Transparency = 0.650
@@ -2318,7 +2318,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		ImageLabel.BackgroundTransparency = 1;
 		ImageLabel.ScaleType = Enum.ScaleType.Crop
 
-		UICorner_2.CornerRadius = UDim.new(0, 4)
+		UICorner_2.CornerRadius = UDim.new(0, 3)
 		UICorner_2.Parent = ImageLabel
 
 		local BackendM = NeverLose:CreateColorPicker(ColorPicker);
@@ -2425,7 +2425,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Keybind.ZIndex = ZINdex + 13
 		Keybind.LayoutOrder = -(#Handler:GetChildren() + 5);
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = Keybind
 
 		UIStroke.Transparency = 0.650
@@ -2580,7 +2580,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		TextInput.ZIndex = ZINdex + 13
 		TextInput.LayoutOrder = -(#Handler:GetChildren() + 5);
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = TextInput
 
 		UIStroke.Transparency = 0.650
@@ -2712,7 +2712,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		DropdownIcon.TextTransparency = 0.250
 		DropdownIcon.TextWrapped = true
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = Dropdown
 
 		UIStroke.Transparency = 0.650
@@ -2838,7 +2838,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 				end;
 			end));
 
-			UICorner.CornerRadius = UDim.new(0, 10)
+			UICorner.CornerRadius = UDim.new(0, 3)
 			UICorner.Parent = DropdownHandler
 
 			UIStroke.Transparency = 0.650
@@ -2994,7 +2994,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 				ItemLabel.TextTransparency = 0.200
 				ItemLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-				UICorner.CornerRadius = UDim.new(0, 10)
+				UICorner.CornerRadius = UDim.new(0, 3)
 				UICorner.Parent = ItemFrame
 				local sizetext = TextService:GetTextSize(ItemLabel.Text , ItemLabel.TextSize,ItemLabel.Font,Vector2.new(math.huge,math.huge));
 
@@ -3258,7 +3258,7 @@ function NeverLose:CreateToolTips(Container: Frame , Name: string , Content: str
 	Tooltips.Size = UDim2.new(0,0,0,0)
 	Tooltips.ZIndex = 130
 
-	UICorner.CornerRadius = UDim.new(0, 10)
+	UICorner.CornerRadius = UDim.new(0, 3)
 	UICorner.Parent = Tooltips
 
 	UIStroke.Transparency = 0.650
@@ -3463,7 +3463,7 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		UIListLayout.Padding = UDim.new(0, 5)
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = BasedFrame
 
 		local UpdateWarp = LPH_NO_VIRTUALIZE(function()
@@ -3612,7 +3612,7 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		LineFrame.Size = UDim2.new(1, -20, 0, 1)
 		LineFrame.ZIndex = LayerIndex + 11
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = ButtonFrame
 
 		Icon.Name = NeverLose.RandomString();
@@ -3746,7 +3746,7 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		LineFrame.Size = UDim2.new(1, -20, 0, 1)
 		LineFrame.ZIndex = LayerIndex + 11
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = UserFrame
 
 		LogoImage.Name = NeverLose.RandomString();
@@ -4162,6 +4162,7 @@ function NeverLose:CreateWindow(Config)
 		NeverLose.Drag(Frame , WindowFrame , 0.15)
 	end
 
+	UICorner.CornerRadius = UDim.new(0, 3)
 	UICorner.Parent = WindowFrame
 
 	LeftMenuFrame.Name = NeverLose.RandomString();
@@ -4191,7 +4192,7 @@ function NeverLose:CreateWindow(Config)
 	LogoImage.Position = UDim2.new(0, 0, 0, 0)
 	LogoImage.ZIndex = 1
 
-	UICorner_2.CornerRadius = UDim.new(0, 7)
+	UICorner_2.CornerRadius = UDim.new(0, 3)
 	UICorner_2.Parent = LogoImage
 
 	do
@@ -4211,14 +4212,14 @@ function NeverLose:CreateWindow(Config)
 		WindowName.BackgroundTransparency = 1.000
 		WindowName.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		WindowName.BorderSizePixel = 0
-		WindowName.Position = UDim2.new(0, 14, 0, 6)
-		WindowName.Size = UDim2.new(1, -24, 0, 22)
+		WindowName.Position = UDim2.new(0, 14, 0, 4)
+		WindowName.Size = UDim2.new(1, -24, 0, 26)
 		WindowName.ZIndex = 7
 		WindowName.Font = Enum.Font.GothamBold
 		WindowName.RichText = true
 		WindowName.Text = titleText
 		WindowName.TextColor3 = Color3.fromRGB(255, 255, 255)
-		WindowName.TextSize = 18.000
+		WindowName.TextSize = 22.000
 		WindowName.TextXAlignment = Enum.TextXAlignment.Left
 		WindowName.TextTruncate = Enum.TextTruncate.AtEnd
 	end
@@ -4229,13 +4230,13 @@ function NeverLose:CreateWindow(Config)
 	WindowContent.BackgroundTransparency = 1.000
 	WindowContent.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	WindowContent.BorderSizePixel = 0
-	WindowContent.Position = UDim2.new(0, 14, 0, 28)
+	WindowContent.Position = UDim2.new(0, 14, 0, 30)
 	WindowContent.Size = UDim2.new(1, -24, 0, 14)
 	WindowContent.ZIndex = 7
 	WindowContent.Font = Enum.Font.GothamBold
 	WindowContent.Text = tostring(Window.Content or "")
 	WindowContent.TextColor3 = Color3.fromRGB(255, 255, 255)
-	WindowContent.TextSize = 10.000
+	WindowContent.TextSize = 11.000
 	WindowContent.TextTransparency = 0.650
 	WindowContent.TextXAlignment = Enum.TextXAlignment.Left
 	WindowContent.TextTruncate = Enum.TextTruncate.AtEnd
@@ -4385,7 +4386,7 @@ function NeverLose:CreateWindow(Config)
 	UIStroke.Color = Color3.fromRGB(45, 48, 58)
 	UIStroke.Parent = RightMenuFrame
 
-	UICorner_4.CornerRadius = UDim.new(0, 13)
+	UICorner_4.CornerRadius = UDim.new(0, 3)
 	UICorner_4.Parent = RightMenuFrame
 
 	RightHeader.Name = NeverLose.RandomString();
@@ -4423,7 +4424,7 @@ function NeverLose:CreateWindow(Config)
 	UIStroke_2.Color = Color3.fromRGB(45, 48, 58)
 	UIStroke_2.Parent = ConfigFrame
 
-	UICorner_5.CornerRadius = UDim.new(0, 4)
+	UICorner_5.CornerRadius = UDim.new(0, 3)
 	UICorner_5.Parent = ConfigFrame
 
 	ConfigIcon.Name = NeverLose.RandomString();
@@ -5218,6 +5219,13 @@ function NeverLose:CreateWindow(Config)
 
 			SubTab.SetValue = LPH_NO_VIRTUALIZE(function(value)
 				SubTab.Signal:SetValue(value)
+				-- keep layouts always attached so section AbsoluteContentSize updates work
+				if not SubUIListL.Parent then
+					SubUIListL.Parent = SubLeftScroll
+				end
+				if SubRightScroll ~= SubLeftScroll and SubUIListR and not SubUIListR.Parent then
+					SubUIListR.Parent = SubRightScroll
+				end
 				if value then
 					setExpanded(true)
 					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 0.45 })
@@ -5229,11 +5237,24 @@ function NeverLose:CreateWindow(Config)
 						TextTransparency = 0,
 						TextColor3 = Color3.fromRGB(255, 255, 255),
 					})
-					SubUIListL.Parent = SubLeftScroll
-					if SubRightScroll ~= SubLeftScroll then SubUIListR.Parent = SubRightScroll end
 					SubTabFrame.Visible = true
 					SubTabFrame.Parent = TabContainer
-					-- parent header stays soft-active
+					SubTabFrame.Size = UDim2.new(1, 0, 1, 0)
+					-- force layout refresh so sections size correctly on first show
+					pcall(function()
+						SubLeftScroll.CanvasSize = UDim2.fromOffset(0, SubUIListL.AbsoluteContentSize.Y + 1)
+						if SubRightScroll ~= SubLeftScroll and SubUIListR then
+							SubRightScroll.CanvasSize = UDim2.fromOffset(0, SubUIListR.AbsoluteContentSize.Y + 1)
+						end
+					end)
+					task.defer(function()
+						pcall(function()
+							SubLeftScroll.CanvasSize = UDim2.fromOffset(0, SubUIListL.AbsoluteContentSize.Y + 1)
+							if SubRightScroll ~= SubLeftScroll and SubUIListR then
+								SubRightScroll.CanvasSize = UDim2.fromOffset(0, SubUIListR.AbsoluteContentSize.Y + 1)
+							end
+						end)
+					end)
 					NeverLose.PlayAnimate(TabIcon, SlowyTween, {
 						TextTransparency = 0.15,
 						TextColor3 = NeverLose.AccentColor,
@@ -5250,8 +5271,6 @@ function NeverLose:CreateWindow(Config)
 						TextTransparency = 0.35,
 						TextColor3 = Color3.fromRGB(200, 200, 205),
 					})
-					SubUIListL.Parent = nil
-					if SubRightScroll ~= SubLeftScroll then SubUIListR.Parent = nil end
 					SubTabFrame.Visible = false
 					SubTabFrame.Parent = nil
 				end
@@ -5281,18 +5300,27 @@ function NeverLose:CreateWindow(Config)
 			end)))
 
 			function SubTab:AddSection(SecConfig)
-				-- temporarily rebind parent closure scrolls so Tab:AddSection parents correctly
+				-- rebind scrolls + signal so sections live on this subtab (not the parent tab)
 				local oldL, oldR = LeftScroll, RightScroll
+				local oldSignal = Tab.Signal
 				LeftScroll = SubLeftScroll
 				RightScroll = SubRightScroll
+				Tab.Signal = SubTab.Signal
 				local ok, section = pcall(function()
 					return Tab:AddSection(SecConfig)
 				end)
 				LeftScroll = oldL
 				RightScroll = oldR
+				Tab.Signal = oldSignal
 				if not ok then
 					warn("[Blar] SubTab:AddSection failed:", section)
 					return nil
+				end
+				-- if this subtab is already active, force sections visible now
+				if Window.Tabs[Window.CurrentTab] == SubTab then
+					SubTab.Signal:SetValue(true)
+					SubTabFrame.Visible = true
+					SubTabFrame.Parent = TabContainer
 				end
 				return section
 			end
@@ -5362,7 +5390,7 @@ function NeverLose:CreateWindow(Config)
 			UIStroke.Color = Color3.fromRGB(45, 48, 58)
 			UIStroke.Parent = SectionHandler
 
-			UICorner.CornerRadius = UDim.new(0, 10)
+			UICorner.CornerRadius = UDim.new(0, 3)
 			UICorner.Parent = SectionHandler
 
 			UIListLayout.Parent = SectionHandler
@@ -5553,7 +5581,7 @@ function NeverLose:CreateWindow(Config)
 		ConfigMenu.Size = UDim2.new(0, 220,0, 110)
 		ConfigMenu.ZIndex = 151
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = ConfigMenu
 
 		UIListLayout.Parent = ConfigMenu
@@ -5641,7 +5669,7 @@ function NeverLose:CreateWindow(Config)
 		TextInput.Size = UDim2.new(0, 100, 0, 18)
 		TextInput.ZIndex = 154
 
-		UICorner_2.CornerRadius = UDim.new(0, 4)
+		UICorner_2.CornerRadius = UDim.new(0, 3)
 		UICorner_2.Parent = TextInput
 
 		UIStroke_2.Transparency = 0.650
@@ -5693,10 +5721,10 @@ function NeverLose:CreateWindow(Config)
 		Icon.TextTransparency = 0.350
 		Icon.TextWrapped = true
 
-		UICorner_3.CornerRadius = UDim.new(0, 4)
+		UICorner_3.CornerRadius = UDim.new(0, 3)
 		UICorner_3.Parent = LoadConfig
 
-		UICorner_4.CornerRadius = UDim.new(0, 10)
+		UICorner_4.CornerRadius = UDim.new(0, 3)
 		UICorner_4.Parent = InputFrame
 
 		local OpenButton = Instance.new("TextButton")
@@ -5717,7 +5745,7 @@ function NeverLose:CreateWindow(Config)
 		OpenButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 		OpenButton.TextSize = 14.000
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = OpenButton
 
 		ConfigLib.SetRender(false);
@@ -5879,7 +5907,7 @@ function NeverLose:CreateWindow(Config)
 				Icon.TextTransparency = 0.400
 				Icon.TextWrapped = true
 
-				UICorner.CornerRadius = UDim.new(0, 4)
+				UICorner.CornerRadius = UDim.new(0, 3)
 				UICorner.Parent = DeleteConfig
 
 				LoadConfig.Name = NeverLose.RandomString();
@@ -5909,7 +5937,7 @@ function NeverLose:CreateWindow(Config)
 				Icon_2.TextTransparency = 0.400
 				Icon_2.TextWrapped = true
 
-				UICorner_2.CornerRadius = UDim.new(0, 4)
+				UICorner_2.CornerRadius = UDim.new(0, 3)
 				UICorner_2.Parent = LoadConfig
 
 				UICorner_3.CornerRadius = UDim.new(0, 5)
@@ -6535,7 +6563,7 @@ function NeverLose:CreateNotification()
 		NotifyFrame.Size = UDim2.new(0, 220, 0, 55)
 		NotifyFrame.ZIndex = 130
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = NotifyFrame
 
 		UIStroke.Transparency = 0.650
@@ -6698,7 +6726,7 @@ function NeverLose:CreateLogger()
 		LogFrame.Size = UDim2.new(0, 0, 0, 20)
 		LogFrame.ZIndex = 130
 
-		UICorner.CornerRadius = UDim.new(0, 4)
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = LogFrame
 
 		UIStroke.Transparency = 1--0.650
@@ -6732,7 +6760,7 @@ function NeverLose:CreateLogger()
 		Line.Size = UDim2.new(0, 5, 1, 0)
 		Line.ZIndex = 131
 
-		UICorner_2.CornerRadius = UDim.new(0, 4)
+		UICorner_2.CornerRadius = UDim.new(0, 3)
 		UICorner_2.Parent = Line
 
 		Icon.Name = NeverLose.RandomString();
