@@ -4759,14 +4759,17 @@ function NeverLose:CreateWindow(Config)
 		Tab.SubTabs = {};
 		Tab.Expanded = false;
 		Tab.IsParent = true;
+		Tab.SelectBackdrop = nil;
 
+		-- Group: fixed-height children only (no scale-Y backdrop in AutomaticSize list)
 		local TabGroup = Instance.new("Frame")
 		TabGroup.Name = NeverLose.RandomString()
 		TabGroup.Parent = LeftScrollingFrame
 		TabGroup.BackgroundTransparency = 1
 		TabGroup.BorderSizePixel = 0
-		TabGroup.Size = UDim2.new(1, -1, 0, 0)
+		TabGroup.Size = UDim2.new(1, -1, 0, 30)
 		TabGroup.AutomaticSize = Enum.AutomaticSize.Y
+		TabGroup.ClipsDescendants = false
 		TabGroup.ZIndex = 8
 		Tab.Group = TabGroup
 
@@ -4774,20 +4777,7 @@ function NeverLose:CreateWindow(Config)
 		GroupLayout.Parent = TabGroup
 		GroupLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		GroupLayout.Padding = UDim.new(0, 2)
-
-		-- selection backdrop that grows over parent + open subtabs
-		local SelectBackdrop = Instance.new("Frame")
-		SelectBackdrop.Name = NeverLose.RandomString()
-		SelectBackdrop.Parent = TabGroup
-		SelectBackdrop.BackgroundColor3 = Color3.fromRGB(41, 45, 49)
-		SelectBackdrop.BackgroundTransparency = 1
-		SelectBackdrop.BorderSizePixel = 0
-		SelectBackdrop.Size = UDim2.new(1, 0, 1, 0)
-		SelectBackdrop.ZIndex = 7
-		local SelectCorner = Instance.new("UICorner")
-		SelectCorner.CornerRadius = UDim.new(0, 3)
-		SelectCorner.Parent = SelectBackdrop
-		Tab.SelectBackdrop = SelectBackdrop
+		GroupLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 		TabButton.Name = NeverLose.RandomString();
 		TabButton.Parent = TabGroup
@@ -4798,6 +4788,7 @@ function NeverLose:CreateWindow(Config)
 		TabButton.Size = UDim2.new(1, 0, 0, 30)
 		TabButton.ZIndex = 9
 		TabButton.LayoutOrder = 0
+		TabButton.ClipsDescendants = false
 
 		local SubHolder = Instance.new("Frame")
 		SubHolder.Name = NeverLose.RandomString()
@@ -4813,9 +4804,11 @@ function NeverLose:CreateWindow(Config)
 		local SubLayout = Instance.new("UIListLayout")
 		SubLayout.Parent = SubHolder
 		SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		SubLayout.Padding = UDim.new(0, 1)
+		SubLayout.Padding = UDim.new(0, 2)
 		local SubPad = Instance.new("UIPadding")
-		SubPad.PaddingLeft = UDim.new(0, 10)
+		SubPad.PaddingLeft = UDim.new(0, 12)
+		SubPad.PaddingTop = UDim.new(0, 0)
+		SubPad.PaddingBottom = UDim.new(0, 2)
 		SubPad.Parent = SubHolder
 		Tab.SubHolder = SubHolder
 
@@ -4862,7 +4855,7 @@ function NeverLose:CreateWindow(Config)
 		TabContentLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TabContentLabel.BorderSizePixel = 0
 		TabContentLabel.Position = UDim2.new(0, 30, 0.5, 0)
-		TabContentLabel.Size = UDim2.new(1, -7, 0, 15)
+		TabContentLabel.Size = UDim2.new(1, -52, 0, 15)
 		TabContentLabel.ZIndex = 9
 		TabContentLabel.Font = Enum.Font.GothamMedium
 		TabContentLabel.Text = Config.Name
@@ -4954,6 +4947,11 @@ function NeverLose:CreateWindow(Config)
 			end;
 		end)));
 
+		Tab._LeftScroll = LeftScroll
+		Tab._RightScroll = RightScroll
+		Tab._TabFrame = TabFrame
+
+
 		Tab.SetValue = LPH_NO_VIRTUALIZE(function(value)
 			Tab.Signal:SetValue(value);
 
@@ -5003,18 +5001,18 @@ function NeverLose:CreateWindow(Config)
 					v.SetValue(false);
 				end;
 			end;
-			-- refresh parent backdrops
+			-- keep parent header soft-active when a sub is selected
 			for _,v in next , Window.Tabs do
-				if v.IsParent and v.SelectBackdrop then
-					local any = (Window.Tabs[Window.CurrentTab] == v)
-					if not any and v.SubTabs then
-						for _,s in next , v.SubTabs do
-							if Window.Tabs[Window.CurrentTab] == s then any = true break end
-						end
+				if v.IsParent and v.SubTabs and #v.SubTabs > 0 then
+					local any = false
+					for _,s in next , v.SubTabs do
+						if Window.Tabs[Window.CurrentTab] == s then any = true break end
 					end
-					NeverLose.PlayAnimate(v.SelectBackdrop, SlowyTween, {
-						BackgroundTransparency = any and 0.55 or 1
-					})
+					if any then
+						pcall(function()
+							NeverLose.PlayAnimate(v.Idx:FindFirstChildWhichIsA("TextLabel"), SlowyTween, {})
+						end)
+					end
 				end
 			end
 		end
@@ -5235,15 +5233,13 @@ function NeverLose:CreateWindow(Config)
 					if SubRightScroll ~= SubLeftScroll then SubUIListR.Parent = SubRightScroll end
 					SubTabFrame.Visible = true
 					SubTabFrame.Parent = TabContainer
-					if Tab.SelectBackdrop then
-						NeverLose.PlayAnimate(Tab.SelectBackdrop, SlowyTween, { BackgroundTransparency = 0.55 })
-					end
 					-- parent header stays soft-active
 					NeverLose.PlayAnimate(TabIcon, SlowyTween, {
 						TextTransparency = 0.15,
 						TextColor3 = NeverLose.AccentColor,
 					})
 					NeverLose.PlayAnimate(TabContentLabel, SlowyTween, { TextTransparency = 0.15 })
+					NeverLose.PlayAnimate(TabButton, SlowyTween, { BackgroundTransparency = 0.75 })
 				else
 					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 1 })
 					NeverLose.PlayAnimate(SubIcon, SlowyTween, {
@@ -5285,17 +5281,19 @@ function NeverLose:CreateWindow(Config)
 			end)))
 
 			function SubTab:AddSection(SecConfig)
-				SecConfig = NeverLose:ProcessParams(SecConfig, {
-					Name = "SECTION",
-					Position = "left",
-				})
-				-- reuse parent Tab:AddSection by temporarily binding scrolls
+				-- temporarily rebind parent closure scrolls so Tab:AddSection parents correctly
 				local oldL, oldR = LeftScroll, RightScroll
 				LeftScroll = SubLeftScroll
 				RightScroll = SubRightScroll
-				local section = Tab.AddSection(Tab, SecConfig)
+				local ok, section = pcall(function()
+					return Tab:AddSection(SecConfig)
+				end)
 				LeftScroll = oldL
 				RightScroll = oldR
+				if not ok then
+					warn("[Blar] SubTab:AddSection failed:", section)
+					return nil
+				end
 				return section
 			end
 
