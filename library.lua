@@ -198,7 +198,7 @@ NeverLose.Scales = {
 NeverLose.IconColor = Color3.fromRGB(255, 255, 255);
 NeverLose.ScreenGui = GlobalWindow;
 NeverLose.Flags = {};
-NeverLose.AccentColor = Color3.fromRGB(78, 127, 252);
+NeverLose.AccentColor = Color3.fromRGB(232, 162, 40); -- Blar.gg orange
 NeverLose.MainColor = Color3.fromRGB(8, 8, 13);
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
@@ -3841,10 +3841,11 @@ end;
 function NeverLose:CreateWindow(Config)
 	Config = NeverLose:ProcessParams(Config , {
 		Logo = NeverLose.GlobalLogo,
-		Name = "Neverlose",
-		Content = "Counter-Strike 2",
+		Name = "Blar",
+		SubTitle = ".gg",
+		Content = "base",
 		Size = UDim2.new(0, 640, 0, 480),
-		ConfigFolder = "NeverLoseConfigs",
+		ConfigFolder = "BlarGG",
 		Enable3DRenderer = false,
 		Keybind = "Insert"
 	});
@@ -3852,6 +3853,7 @@ function NeverLose:CreateWindow(Config)
 	local Window = {
 		Logo = Config.Logo,
 		Name = Config.Name,
+		SubTitle = Config.SubTitle or "",
 		Content = Config.Content,
 		Size = Config.Size,
 		ConfigFolder = Config.ConfigFolder,
@@ -3862,7 +3864,10 @@ function NeverLose:CreateWindow(Config)
 		Enable3DRenderer = Config.Enable3DRenderer
 	};
 
-	NeverLose.GlobalLogo = Window.Logo;
+	-- keep global logo for notifications only (not shown in window header)
+	if Config.Logo then
+		NeverLose.GlobalLogo = Config.Logo;
+	end;
 
 	local Logging = NeverLose:CreateLogger();
 	if not isfolder(Window.ConfigFolder) then
@@ -4176,36 +4181,47 @@ function NeverLose:CreateWindow(Config)
 	HeadFrame.Size = UDim2.new(1, 0, 0, 50)
 	HeadFrame.ZIndex = 7
 
+	-- Logo slot removed: text-only brand (Name + accent SubTitle + Content description)
 	LogoImage.Name = NeverLose.RandomString();
 	LogoImage.Parent = HeadFrame
-	LogoImage.AnchorPoint = Vector2.new(0, 0.5)
-	LogoImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	LogoImage.BackgroundTransparency = 1.000
-	LogoImage.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	LogoImage.BorderSizePixel = 0
-	LogoImage.Position = UDim2.new(0, 10, 0.5, 0)
-	LogoImage.Size = UDim2.new(0, 35, 0, 35)
-	LogoImage.ZIndex = 7
-	LogoImage.Image = Window.Logo
-	LogoImage.ImageColor3 = NeverLose.IconColor
+	LogoImage.Visible = false
+	LogoImage.BackgroundTransparency = 1
+	LogoImage.ImageTransparency = 1
+	LogoImage.Size = UDim2.new(0, 0, 0, 0)
+	LogoImage.Position = UDim2.new(0, 0, 0, 0)
+	LogoImage.ZIndex = 1
 
 	UICorner_2.CornerRadius = UDim.new(0, 7)
 	UICorner_2.Parent = LogoImage
 
-	WindowName.Name = NeverLose.RandomString();
-	WindowName.Parent = HeadFrame
-	WindowName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	WindowName.BackgroundTransparency = 1.000
-	WindowName.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	WindowName.BorderSizePixel = 0
-	WindowName.Position = UDim2.new(0, 55, 0, 4)
-	WindowName.Size = UDim2.new(0, 200, 0, 25)
-	WindowName.ZIndex = 7
-	WindowName.Font = Enum.Font.GothamBold
-	WindowName.Text = Window.Name
-	WindowName.TextColor3 = Color3.fromRGB(255, 255, 255)
-	WindowName.TextSize = 18.000
-	WindowName.TextXAlignment = Enum.TextXAlignment.Left
+	do
+		local accent = NeverLose.AccentColor or Color3.fromRGB(232, 162, 40)
+		local ar = math.floor(accent.R * 255 + 0.5)
+		local ag = math.floor(accent.G * 255 + 0.5)
+		local ab = math.floor(accent.B * 255 + 0.5)
+		local sub = tostring(Window.SubTitle or "")
+		local titleText = tostring(Window.Name or "Blar")
+		if sub ~= "" then
+			titleText = titleText .. string.format('<font color="rgb(%d, %d, %d)">%s</font>', ar, ag, ab, sub)
+		end
+
+		WindowName.Name = NeverLose.RandomString();
+		WindowName.Parent = HeadFrame
+		WindowName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		WindowName.BackgroundTransparency = 1.000
+		WindowName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		WindowName.BorderSizePixel = 0
+		WindowName.Position = UDim2.new(0, 14, 0, 6)
+		WindowName.Size = UDim2.new(1, -24, 0, 22)
+		WindowName.ZIndex = 7
+		WindowName.Font = Enum.Font.GothamBold
+		WindowName.RichText = true
+		WindowName.Text = titleText
+		WindowName.TextColor3 = Color3.fromRGB(255, 255, 255)
+		WindowName.TextSize = 18.000
+		WindowName.TextXAlignment = Enum.TextXAlignment.Left
+		WindowName.TextTruncate = Enum.TextTruncate.AtEnd
+	end
 
 	WindowContent.Name = NeverLose.RandomString();
 	WindowContent.Parent = HeadFrame
@@ -4213,15 +4229,16 @@ function NeverLose:CreateWindow(Config)
 	WindowContent.BackgroundTransparency = 1.000
 	WindowContent.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	WindowContent.BorderSizePixel = 0
-	WindowContent.Position = UDim2.new(0, 55, 0, 25)
-	WindowContent.Size = UDim2.new(0, 200, 0, 15)
+	WindowContent.Position = UDim2.new(0, 14, 0, 28)
+	WindowContent.Size = UDim2.new(1, -24, 0, 14)
 	WindowContent.ZIndex = 7
 	WindowContent.Font = Enum.Font.GothamBold
-	WindowContent.Text = Window.Content
+	WindowContent.Text = tostring(Window.Content or "")
 	WindowContent.TextColor3 = Color3.fromRGB(255, 255, 255)
-	WindowContent.TextSize = 9.000
+	WindowContent.TextSize = 10.000
 	WindowContent.TextTransparency = 0.650
 	WindowContent.TextXAlignment = Enum.TextXAlignment.Left
+	WindowContent.TextTruncate = Enum.TextTruncate.AtEnd
 
 	LineFrame.Name = NeverLose.RandomString();
 	LineFrame.Parent = HeadFrame
@@ -6691,4 +6708,5 @@ function NeverLose:Unload()
 	end;
 end;
 
+getgenv().NeverLose = NeverLose;
 return NeverLose;
