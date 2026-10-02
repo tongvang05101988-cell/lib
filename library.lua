@@ -198,7 +198,8 @@ NeverLose.Scales = {
 NeverLose.IconColor = Color3.fromRGB(255, 255, 255);
 NeverLose.ScreenGui = GlobalWindow;
 NeverLose.Flags = {};
-NeverLose.AccentColor = Color3.fromRGB(232, 162, 40); -- Blar.gg orange
+NeverLose.AccentColor = Color3.fromRGB(232, 162, 40); -- Blar.gg orange (tabs / header)
+NeverLose.SectionAccent = Color3.fromRGB(138, 110, 255); -- controls inside sections (toggles / sliders)
 NeverLose.MainColor = Color3.fromRGB(8, 8, 13);
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
@@ -1773,7 +1774,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 			if value then
 				NeverLose.PlayAnimate(Toggle,SlowyTween,{
 					BackgroundTransparency = 0,
-					BackgroundColor3 = NeverLose.AccentColor
+					BackgroundColor3 = (NeverLose.SectionAccent or NeverLose.AccentColor)
 				})
 
 				NeverLose.PlayAnimate(Circle,SlowyTween,{
@@ -1975,7 +1976,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 
 		SlideMoving.Name = NeverLose.RandomString();
 		SlideMoving.Parent = SlideFrame
-		SlideMoving.BackgroundColor3 = NeverLose.AccentColor
+		SlideMoving.BackgroundColor3 = (NeverLose.SectionAccent or NeverLose.AccentColor)
 		SlideMoving.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		SlideMoving.BorderSizePixel = 0
 		SlideMoving.Size = UDim2.new(SliderLib.GetSize(), 0, 1, 0)
@@ -3845,7 +3846,7 @@ function NeverLose:CreateWindow(Config)
 		SubTitle = ".gg",
 		Content = "base",
 		Size = UDim2.new(0, 640, 0, 480),
-		ConfigFolder = "BlarGG",
+		ConfigFolder = "blargg",
 		Enable3DRenderer = false,
 		Keybind = "Insert"
 	});
@@ -4162,7 +4163,7 @@ function NeverLose:CreateWindow(Config)
 		NeverLose.Drag(Frame , WindowFrame , 0.15)
 	end
 
-	UICorner.CornerRadius = UDim.new(0, 8)
+	UICorner.CornerRadius = UDim.new(0, 5)
 	UICorner.Parent = WindowFrame
 
 	LeftMenuFrame.Name = NeverLose.RandomString();
