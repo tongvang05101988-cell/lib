@@ -4937,7 +4937,7 @@ do -- Library
             Parent = PatternHolder
         })
         --
-        -- Blar.gg top accent bar: dark blue → light blue wave (animated)
+        -- Blar.gg top accent bar: full-width dark→light blue gradient with flowing wave
         local TopBarGradientHolder = Library:CreateObject("Frame", {
             Name = "TopBarGradientHolder",
             Position = UDim2.new(0, 1, 0, 1),
@@ -4961,25 +4961,45 @@ do -- Library
         --
         local TopBarWaveGradient = Library:CreateObject("UIGradient", {
             Rotation = 0,
-            Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0.00, Color3.fromRGB(18, 42, 120)),
-                ColorSequenceKeypoint.new(0.20, Color3.fromRGB(32, 72, 170)),
-                ColorSequenceKeypoint.new(0.40, Color3.fromRGB(47, 107, 255)),
-                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(110, 155, 255)),
-                ColorSequenceKeypoint.new(0.70, Color3.fromRGB(47, 107, 255)),
-                ColorSequenceKeypoint.new(0.85, Color3.fromRGB(32, 72, 170)),
-                ColorSequenceKeypoint.new(1.00, Color3.fromRGB(18, 42, 120)),
-            },
+            Offset = Vector2.new(0, 0),
             Parent = GradientBar
         })
         --
-        Library:Connection(RunService.RenderStepped, function()
-            if not TopBarWaveGradient or not TopBarWaveGradient.Parent then return end
-            local t = tick() * 0.65
-            -- horizontal drift + slight rotation wobble for a soft wave
-            TopBarWaveGradient.Offset = Vector2.new(math.sin(t) * 0.55, 0)
-            TopBarWaveGradient.Rotation = math.sin(t * 0.85) * 12
-        end, "TopBarWave")
+        do -- flowing blue wave (rebuilds gradient so colors sweep the full bar)
+            local DARK  = Color3.fromRGB(18, 42, 120)
+            local MID   = Color3.fromRGB(47, 107, 255)
+            local LIGHT = Color3.fromRGB(140, 180, 255)
+            local STOPS = 9
+
+            local function buildWave(phase)
+                local keys = table.create(STOPS)
+                for i = 0, STOPS - 1 do
+                    local t = i / (STOPS - 1)
+                    -- smooth sine wave across the bar (0..1 brightness)
+                    local wave = (math.sin((t * math.pi * 2) + phase) + 1) * 0.5
+                    -- dark → mid → light based on wave height
+                    local color
+                    if wave < 0.5 then
+                        color = DARK:Lerp(MID, wave * 2)
+                    else
+                        color = MID:Lerp(LIGHT, (wave - 0.5) * 2)
+                    end
+                    keys[i + 1] = ColorSequenceKeypoint.new(t, color)
+                end
+                return ColorSequence.new(keys)
+            end
+
+            TopBarWaveGradient.Color = buildWave(0)
+
+            Library:Connection(RunService.RenderStepped, function()
+                if not TopBarWaveGradient or not TopBarWaveGradient.Parent then return end
+                -- slow continuous phase = wave rolls left→right across full width
+                local phase = tick() * 1.35
+                TopBarWaveGradient.Color = buildWave(phase)
+                TopBarWaveGradient.Offset = Vector2.new(0, 0)
+                TopBarWaveGradient.Rotation = 0
+            end, "TopBarWave")
+        end
         --
         local SideBarMain = Library:CreateObject("Frame", {
             Name = "SideBarMain",
