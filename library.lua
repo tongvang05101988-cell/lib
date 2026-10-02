@@ -5217,9 +5217,55 @@ function NeverLose:CreateWindow(Config)
 				end)))
 			end
 
+			SubTab.Sections = SubTab.Sections or {}
+
+			local function refreshSubSections()
+				for _, sec in next, SubTab.Sections do
+					pcall(function()
+						if sec.SetRender then
+							sec.SetRender(true)
+						end
+						-- force section frame height from its list layout
+						local handler = sec._Handler or sec.Handler
+						if not handler and sec.GetHandler then
+							handler = sec:GetHandler()
+						end
+					end)
+				end
+				-- resize every section frame under the scrolls
+				for _, scroll in next, { SubLeftScroll, SubRightScroll } do
+					if scroll then
+						for _, child in next, scroll:GetChildren() do
+							if child:IsA("Frame") then
+								local layout = child:FindFirstChildWhichIsA("UIListLayout", true)
+								-- section structure: SectionFrame > SectionHandler > UIListLayout
+								local handler = child:FindFirstChildWhichIsA("Frame")
+								if handler then
+									local ul = handler:FindFirstChildWhichIsA("UIListLayout")
+									if ul then
+										local h = ul.AbsoluteContentSize.Y
+										if h > 1 then
+											child.Size = UDim2.new(1, -5, 0, h + 19.5)
+										end
+										handler.BackgroundTransparency = 0.5
+										local stroke = handler:FindFirstChildWhichIsA("UIStroke")
+										if stroke then stroke.Transparency = 0.65 end
+									end
+								end
+								local label = child:FindFirstChildWhichIsA("TextLabel")
+								if label then label.TextTransparency = 0.5 end
+							end
+						end
+						local ul = scroll:FindFirstChildWhichIsA("UIListLayout")
+						if ul then
+							scroll.CanvasSize = UDim2.fromOffset(0, ul.AbsoluteContentSize.Y + 1)
+						end
+					end
+				end
+			end
+
 			SubTab.SetValue = LPH_NO_VIRTUALIZE(function(value)
 				SubTab.Signal:SetValue(value)
-				-- keep layouts always attached so section AbsoluteContentSize updates work
 				if not SubUIListL.Parent then
 					SubUIListL.Parent = SubLeftScroll
 				end
@@ -5240,21 +5286,9 @@ function NeverLose:CreateWindow(Config)
 					SubTabFrame.Visible = true
 					SubTabFrame.Parent = TabContainer
 					SubTabFrame.Size = UDim2.new(1, 0, 1, 0)
-					-- force layout refresh so sections size correctly on first show
-					pcall(function()
-						SubLeftScroll.CanvasSize = UDim2.fromOffset(0, SubUIListL.AbsoluteContentSize.Y + 1)
-						if SubRightScroll ~= SubLeftScroll and SubUIListR then
-							SubRightScroll.CanvasSize = UDim2.fromOffset(0, SubUIListR.AbsoluteContentSize.Y + 1)
-						end
-					end)
-					task.defer(function()
-						pcall(function()
-							SubLeftScroll.CanvasSize = UDim2.fromOffset(0, SubUIListL.AbsoluteContentSize.Y + 1)
-							if SubRightScroll ~= SubLeftScroll and SubUIListR then
-								SubRightScroll.CanvasSize = UDim2.fromOffset(0, SubUIListR.AbsoluteContentSize.Y + 1)
-							end
-						end)
-					end)
+					-- immediately show section cards (don't wait for signal consumers)
+					refreshSubSections()
+					task.defer(refreshSubSections)
 					NeverLose.PlayAnimate(TabIcon, SlowyTween, {
 						TextTransparency = 0.15,
 						TextColor3 = NeverLose.AccentColor,
@@ -5300,7 +5334,6 @@ function NeverLose:CreateWindow(Config)
 			end)))
 
 			function SubTab:AddSection(SecConfig)
-				-- rebind scrolls + signal so sections live on this subtab (not the parent tab)
 				local oldL, oldR = LeftScroll, RightScroll
 				local oldSignal = Tab.Signal
 				LeftScroll = SubLeftScroll
@@ -5316,11 +5349,26 @@ function NeverLose:CreateWindow(Config)
 					warn("[Blar] SubTab:AddSection failed:", section)
 					return nil
 				end
-				-- if this subtab is already active, force sections visible now
+				SubTab.Sections = SubTab.Sections or {}
+				if section then
+					table.insert(SubTab.Sections, section)
+					-- always paint section visible state for this sub's signal
+					pcall(function()
+						if section.SetRender then
+							section.SetRender(SubTab.Signal:GetValue() == true)
+						end
+					end)
+				end
 				if Window.Tabs[Window.CurrentTab] == SubTab then
-					SubTab.Signal:SetValue(true)
 					SubTabFrame.Visible = true
 					SubTabFrame.Parent = TabContainer
+					SubTab.Signal:SetValue(true)
+					if section and section.SetRender then
+						section.SetRender(true)
+					end
+					task.defer(function()
+						if refreshSubSections then refreshSubSections() end
+					end)
 				end
 				return section
 			end
