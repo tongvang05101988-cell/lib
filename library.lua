@@ -21,12 +21,12 @@ local Camera = Workspace:FindFirstChildWhichIsA("Camera")
 local Viewport = Camera.ViewportSize
 --
 do -- Folders
-    if not isfolder("gamesense") then
-        makefolder("gamesense")
+    if not isfolder("blargg") then
+        makefolder("blargg")
     end
     --
-    if not isfolder("gamesense/Configs") then
-        makefolder("gamesense/Configs")
+    if not isfolder("blargg/configs") then
+        makefolder("blargg/configs")
     end
 end
 --
@@ -44,10 +44,10 @@ do -- Library
         UID = "1",
         UnsafeMode = false,
         InitTime = os.clock(),
-        Folder = "gamesense",
-        ConfigFolder = "gamesense/Configs",
+        Folder = "blargg",
+        ConfigFolder = "blargg/configs",
         UI = {
-            Name = "gamesense",
+            Name = "blargg",
             CloseBind = Enum.KeyCode.Insert,
             SectionResizeIncrements = 1,
             WatermarkRefreshRate = 1,
@@ -128,8 +128,8 @@ do -- Library
         Theme = {
             Objects = {},
             Default = {
-                Accent = Color3.fromRGB(153, 196, 39),
-                SecondAccent = Color3.fromRGB(124, 158, 32),
+                Accent = Color3.fromRGB(47, 107, 255),
+                SecondAccent = Color3.fromRGB(32, 72, 170),
                 TextColor = Color3.fromRGB(205, 205, 205),
                 Risky = Color3.fromRGB(165, 165, 120),
             }
@@ -316,8 +316,8 @@ do -- Library
     end
     --
     function Library:UpdateConfigList(List, Type)
-        for _, File in listfiles("gamesense/Configs") do
-            local FileName = File:gsub("\\", "/"):gsub("gamesense/Configs/", ""):gsub(".cfg", "")
+        for _, File in listfiles("blargg/configs") do
+            local FileName = File:gsub("\\", "/"):gsub("blargg/configs/", ""):gsub(".cfg", "")
             --
             if Type == "Remove" then
                 List:RemoveValue(FileName)
@@ -4842,7 +4842,7 @@ do -- Library
     --
     function Library:Window(Options)
         Options = Library:Validate({
-            Name = "gamesense",
+            Name = "blargg",
             Size = UDim2.new(0, 700, 0, 612),
             MinResize = UDim2.new(0, 500, 0, 400),
             MaxResize = UDim2.new(0, 10000, 0, 10000),
@@ -4937,40 +4937,49 @@ do -- Library
             Parent = PatternHolder
         })
         --
+        -- Blar.gg top accent bar: dark blue → light blue wave (animated)
         local TopBarGradientHolder = Library:CreateObject("Frame", {
             Name = "TopBarGradientHolder",
             Position = UDim2.new(0, 1, 0, 1),
             BorderColor3 = Color3.fromRGB(0, 0, 0),
             Size = UDim2.new(1, -2, 0, 4),
             BorderSizePixel = 0,
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            BackgroundColor3 = Color3.fromRGB(47, 107, 255),
             Parent = Outline_1
         })
         --
-        local GradientBar = Library:CreateObject("ImageLabel", {
+        local GradientBar = Library:CreateObject("Frame", {
             BorderColor3 = Color3.fromRGB(0, 0, 0),
-            Image = "rbxassetid://8508019876",
-            BackgroundTransparency = 1,
-            Position = UDim2.new(0, 1, 0, 1),
+            BackgroundTransparency = 0,
+            Position = UDim2.new(0, 0, 0, 0),
             Name = "GradientBar",
-            Size = UDim2.new(1, -2, 1, -2),
+            Size = UDim2.new(1, 0, 1, 0),
             BorderSizePixel = 0,
             BackgroundColor3 = Color3.fromRGB(255, 255, 255),
             Parent = TopBarGradientHolder
         })
         --
-        local UIGradient = Library:CreateObject("UIGradient", {
-            Rotation = 90,
-            Transparency = NumberSequence.new{
-                NumberSequenceKeypoint.new(0, 0),
-                NumberSequenceKeypoint.new(1, 0.550000011920929)
-            },
+        local TopBarWaveGradient = Library:CreateObject("UIGradient", {
+            Rotation = 0,
             Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 12, 12)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+                ColorSequenceKeypoint.new(0.00, Color3.fromRGB(18, 42, 120)),
+                ColorSequenceKeypoint.new(0.20, Color3.fromRGB(32, 72, 170)),
+                ColorSequenceKeypoint.new(0.40, Color3.fromRGB(47, 107, 255)),
+                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(110, 155, 255)),
+                ColorSequenceKeypoint.new(0.70, Color3.fromRGB(47, 107, 255)),
+                ColorSequenceKeypoint.new(0.85, Color3.fromRGB(32, 72, 170)),
+                ColorSequenceKeypoint.new(1.00, Color3.fromRGB(18, 42, 120)),
             },
-            Parent = TopBarGradientHolder
+            Parent = GradientBar
         })
+        --
+        Library:Connection(RunService.RenderStepped, function()
+            if not TopBarWaveGradient or not TopBarWaveGradient.Parent then return end
+            local t = tick() * 0.65
+            -- horizontal drift + slight rotation wobble for a soft wave
+            TopBarWaveGradient.Offset = Vector2.new(math.sin(t) * 0.55, 0)
+            TopBarWaveGradient.Rotation = math.sin(t * 0.85) * 12
+        end, "TopBarWave")
         --
         local SideBarMain = Library:CreateObject("Frame", {
             Name = "SideBarMain",
@@ -6928,7 +6937,7 @@ do -- Library
                 FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
                 TextColor3 = Color3.fromRGB(208, 208, 208),
                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                Text = "gamesense",
+                Text = "blar.gg",
                 Name = "Text",
                 Size = UDim2.new(1, 0, 1, 0),
                 BackgroundTransparency = 1,
@@ -6970,10 +6979,10 @@ do -- Library
             --
             local R, G, B = Library.Theme.Default.Accent.R * 255, Library.Theme.Default.Accent.G * 255, Library.Theme.Default.Accent.B * 255
             --
-            Library:UpdateWatermark(("game<font color='rgb(%d, %d, %d)'>sense</font>  <font color='rgb(%d, %d, %d)'>%s</font> <font size='10'>FPS</font>  %s"):format(R, G, B, R, G, B, "60", os.date("%X")))
+            Library:UpdateWatermark(("blar<font color='rgb(%d, %d, %d)'>.gg</font>  <font color='rgb(%d, %d, %d)'>%s</font> <font size='10'>FPS</font>  %s"):format(R, G, B, R, G, B, "60", os.date("%X")))
             --
             Library:Notify({
-                Message = ("You are using <font color='rgb(%d, %d, %d)'>gamesense</font>. Join <font color='rgb(%d, %d, %d)'>@</font> discord.gg/3E82u6ecyW"):format(R, G, B, R, G, B),
+                Message = ("You are using <font color='rgb(%d, %d, %d)'>blar.gg</font>."):format(R, G, B),
                 Position = "Top Left",
                 Delay = 15
             })
@@ -6987,7 +6996,7 @@ do -- Library
                         Watermark.Tick = tick()
                         --
                         if (tick() - Watermark.RefreshTick) > Library.UI.WatermarkRefreshRate then
-                            Library:UpdateWatermark(("game<font color='rgb(%d, %d, %d)'>sense</font>  <font color='rgb(%d, %d, %d)'>%s</font> <font size='10'>FPS</font>  %s"):format(R, G, B, R, G, B, FPS, os.date("%X")))
+                            Library:UpdateWatermark(("blar<font color='rgb(%d, %d, %d)'>.gg</font>  <font color='rgb(%d, %d, %d)'>%s</font> <font size='10'>FPS</font>  %s"):format(R, G, B, R, G, B, FPS, os.date("%X")))
                             --
                             Watermark.RefreshTick = tick()
                         end
@@ -7198,216 +7207,5 @@ do -- Library
         return setmetatable(Window, Library)
     end
 end
---
-local Window = Library:Window({CloseBind = Enum.KeyCode.Insert})
-local Rage = Window:CreateTab({Icon = "rbxassetid://18248771514"})
-local AntiAim = Window:CreateTab({Icon = "rbxassetid://15453313321"})
-local Aimbot = Window:CreateTab({Icon = "rbxassetid://15453335745"})
-local Visuals = Window:CreateTab({Icon = "rbxassetid://15453344494"})
-local Settings = Window:CreateTab({Icon = "rbxassetid://15453349637"})
-local Weapons = Window:CreateTab({Icon = "rbxassetid://15453354931"})
-local PlayerList = Window:CreateTab({Icon = "rbxassetid://15453359751"})
-local Configs = Window:CreateTab({Icon = "rbxassetid://15453364412"})
-local Lua = Window:CreateTab({Icon = "rbxassetid://18240049800"})
-local ActualPlayerList
---
-Window:SetTab(8)
-AntiAim:Section({Fill = true})
-AntiAim:Section({Fill = true, Side = "Right"})
---
-do -- Rage
-    Rage:ImageDropdown({Name = "Weapon type", Flag = "RageWeaponType", Options = {["Global"] = {Icon = "rbxassetid://18657040454", Order = 1}, ["Double Barrel SG"] = {Icon = "rbxassetid://18205706952", Order = 2}, ["Revolver"] = {Icon = "rbxassetid://18205704829", Order = 3}, ["LMG"] = {Icon = "rbxassetid://18205822505", Order = 4}}, Default = "Global"})
-    --
-	Rage:Section({Fill = true, Side = "Right"})
-	local RageSection = Rage:Section({Fill = true})
-	local Toggle1, Toggle2, Toggle3 = nil, nil, nil
-	local Test = nil
-	--
-	local g = RageSection:Toggle({Callback = function(State)
-		if not Toggle1 then return end
-		--
-		Toggle1:SetVisible(State)
-		Toggle2:SetVisible(State)
-		Toggle3:SetVisible(State)
-	end})
-	g:ColorPicker()
-	g:ColorPicker()
-	g:Keybind()
-	--
-	Toggle1 = RageSection:Toggle({Hidden = true, Callback = function(State)
-		if not Test then return end
-		--
-		Test:SetVisible(State)
-	end})
-	Toggle1:Keybind({Default = Enum.KeyCode.Q, Mode = "On hotkey"})
-	Test = RageSection:Slider({Name = "", Hidden = true, Default = 50})
-	Toggle2 = RageSection:List({Hidden = true})
-	Toggle3 = RageSection:Button({Confirmation = true, Hidden = true})
-	--
-	RageSection:Dropdown({Content = {"Option 1", "Option 2"}})
-	RageSection:Label()
-	RageSection:MultiBox({Content = {"Option 1", "Option 2"}})
-end
---
-do -- Visuals
-	local VisualsSubSection, VisualsSubSection2, VisualsSubSection3, VisualsSubSection4 = Visuals:SubSection({Name = "Category", Options = {"rbxassetid://18334627891", "rbxassetid://18334630306", "rbxassetid://18334626899", "rbxassetid://18334625304"}})
-	VisualsSubSection2:Section({Side = "Right", Fill = true})
-	VisualsSubSection2:Section({Fill = true})
-	VisualsSubSection4:Section({Side = "Right", Fill = true})
-	VisualsSubSection4:Section({Fill = true})
 
-
-	local PreviewVisualSection = VisualsSubSection:Section({Side = "Right", Size = 150})
-	local PreviewExtraSection1 = VisualsSubSection:Section({Side = "Right", Fill = true})
-	local PreviewExtraSection2 = VisualsSubSection:Section({Fill = true})
-	local Slider1, Slider2 = nil, nil
-	--
-	PreviewVisualSection:Dropdown({Content = {"test2", "Test3"}})
-	PreviewVisualSection:MultiBox({Content = {"test2", "Test3"}})
-	PreviewVisualSection:Toggle({Risky = true, Callback = function(State)
-		if not (Slider1 and Slider2) then return end
-		--
-		Slider1:SetVisible(State)
-		Slider2:SetVisible(State)
-	end})
-	--
-	Slider1 = PreviewVisualSection:Slider({Hidden = true, UseIcons = false})
-	Slider2 = PreviewVisualSection:Slider({Name = "FOV", Hidden = true, Min = 0, Max = 11, Default = 5, Decimal = 1, Ending = "°", Disable = {"Disabled", 0, 11}})
-end
---
-do -- Settings
-	local SettingsSection = Settings:Section({Name = "Settings", Side = "Right", Fill = true})
-	--
-	do -- Settings
-		SettingsSection:Label({Message = "Menu key"}):Keybind({Default = Enum.KeyCode.Insert, UseMode = false, Callback = function(Key) Library.UI.CloseBind = Key end})
-		SettingsSection:Label({Message = "Menu color"}):ColorPicker({Default = Library.Theme.Default.Accent, Callback = function(Color)
-			Library:UpdateColor("Accent", Color)
-			Library:UpdateColor("SecondAccent", Color3.fromRGB(math.max(math.floor(Color.R * 255) - 12, 0), math.max(math.floor(Color.G * 255) - 12, 0), math.max(math.floor(Color.B * 255) - 12, 0)))
-		end})
-		SettingsSection:Slider({Name = "Menu animation speed", Min = 0, Max = 150, Default = 100, Ending = "%", Disable = {"Off", 0, 150}, Callback = function(Value)
-			local MinSource, MaxSource = 1, 150
-			local MinTarget, MaxTarget = 0.8, 0.1
-			local NewValue = MinTarget + ((Value - MinSource) * (MaxTarget - MinTarget)) / (MaxSource - MinSource)
-			--
-			Library.UI.TweenSpeed = Value == (0 or 150) and 0 or NewValue
-		end})
-		SettingsSection:Button({Name = "Unload", Callback = Library.Unload})
-		SettingsSection:Button({Name = "Disable all", Callback = Library.Disable})
-	end
-end
---
-do -- Weapons
-	local SkinsSection = Weapons:Section({Name = "Skins", Fill = true})
-	local SkinList = SkinsSection:List({Size = 200})
-	--
-	SkinList:AddValue("Test Skin 1", {Image = "http://www.roblox.com/asset/?id=12206409737", Color = Color3.fromRGB(232, 0, 0), Size = UDim2.fromOffset(5, 5), Position = UDim2.new(0, 11, 0.5, 0)})
-	SkinList:AddValue("Test Skin 2", {Image = "http://www.roblox.com/asset/?id=12206409737", Color = Color3.fromRGB(2, 144, 232), Size = UDim2.fromOffset(5, 5), Position = UDim2.new(0, 11, 0.5, 0)})
-	SkinList:AddValue("Test Skin 3", {Image = "http://www.roblox.com/asset/?id=12206409737", Color = Color3.fromRGB(198, 7, 232), Size = UDim2.fromOffset(5, 5), Position = UDim2.new(0, 11, 0.5, 0)})
-	SkinList:AddValue("Test Skin 4", {Image = "http://www.roblox.com/asset/?id=12206409737", Color = Color3.fromRGB(36, 232, 1), Size = UDim2.fromOffset(5, 5), Position = UDim2.new(0, 11, 0.5, 0)})
-end
---
-do -- Aimbot
-	local AimbotSubSection, AimbotSubSection2 = Aimbot:SubSection({Name = "Category", Options = {"rbxassetid://18686402989", "rbxassetid://18657040454", "rbxassetid://18205704829", "rbxassetid://18205706952", "rbxassetid://18205822505"}})
-end
---
-do -- PlayerList
-	local PlayerSection = PlayerList:Section({Name = "Players", Fill = true})
-	local PlayerAdjustments = PlayerList:Section({Name = "Adjustments", Fill = true, Side = "Right"})
-	--
-	do -- Player Section
-		ActualPlayerList = PlayerSection:List({Flag = "PlayerListCurrentPlayer", Size = 300})
-		--
-		PlayerSection:Button({Name = "View player", Callback = function()
-			local Player = Players:FindFirstChild(Library.Flags["PlayerListCurrentPlayer"]:Get())
-			--
-			if Player then
-				Library:ViewPlayer(Player)
-			end
-		end})
-		--
-		for _, Player in Players:GetPlayers() do
-			ActualPlayerList:AddValue(Player.Name, {Image = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)})
-		end
-	end
-	--
-	do -- Adjustments
-		PlayerAdjustments:Toggle({Name = "Whitelisted"})
-	end
-end
---
-do -- Configs
-	local ConfigSection = Configs:Section({Name = "Configs", Fill = true})
-	local LuaSection = Configs:Section({Name = "LUA", Side = "Right", Fill = true})
-	--
-	do -- Configs
-		local ConfigList = ConfigSection:List({Size = 200, Flag = "CurrentConfig"})
-		--
-		Library:UpdateConfigList(ConfigList, "Add")
-		--
-		ConfigSection:Button({Name = "Update config", Callback = function()
-			if Library.Flags["CurrentConfig"]:Get() then
-				writefile("LuckyHub/Configs/" .. Library.Flags["CurrentConfig"]:Get() .. ".cfg", Library:GetConfig())
-			end
-		end})
-		ConfigSection:Button({Name = "Load config", Callback = function()
-			if Library.Flags["CurrentConfig"]:Get() then
-				Library:LoadConfig(readfile("LuckyHub/Configs/" .. Library.Flags["CurrentConfig"]:Get() .. ".cfg"))
-			end
-		end})
-		ConfigSection:TextBox({Flag = "ConfigName"})
-		ConfigSection:Button({Name = "Create config", Callback = function()
-			local ConfigName = Library.Flags["ConfigName"]:Get()
-			--
-			if Library.Flags["ConfigName"]:Get() ~= "" and not isfile("LuckyHub/Configs/" .. ConfigName .. ".cfg") then
-			    writefile("LuckyHub/Configs/" .. ConfigName .. ".cfg", Library:GetConfig())
-			    --
-			    ConfigList:AddValue(ConfigName)
-			end
-		end})
-		ConfigSection:Button({Name = "Refresh list", Callback = function()
-			Library:UpdateConfigList(ConfigList, "Remove")
-			Library:UpdateConfigList(ConfigList, "Add")
-		end})
-	end
-	--
-	do -- LUA
-		local LuaList = LuaSection:List({Size = 75})
-		--
-		LuaSection:Button({Name = "Load script"})
-		LuaSection:Button({Name = "Unload script"})
-		LuaSection:Button({Name = "Refresh list"})
-	end
-end
---
-do -- Lua
-	local TabA = Lua:Section({Name = "Tab A", Fill = true})
-	local TabB = Lua:Section({Name = "Tab B", Side = "Right", Fill = true})
-end
---
-do -- Connections
-	Library:Connection(Players.PlayerAdded, function(Player)
-		if not ActualPlayerList then return end
-		--
-		ActualPlayerList:AddValue(Player.Name, {Image = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)})
-	end)
-	--
-	Library:Connection(Players.PlayerRemoving, function(Player)
-		if not ActualPlayerList then return end
-		--
-		ActualPlayerList:AddValue(Player.Name, {Image = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)})
-	end)
-end
---
-Library:Init()
---
-local Position = "Top Left"
---
-for i = 1, 10 do
-	local R, G, B = Library.Theme.Default.Accent.R * 255, Library.Theme.Default.Accent.G * 255, Library.Theme.Default.Accent.B * 255
-	--
-	Library:Notify({Message = ("hit <font color='rgb(%d, %d, %d)'>awesomegamer5</font> in the <font color='rgb(%d, %d, %d)'>head</font> for <font color='rgb(%d, %d, %d)'>100</font> damage (0 health remaining)"):format(R, G, B, R, G, B, R, G, B), Position = Position, Delay = 3})
-	--
-	Position = Position == "Top Left" and "Middle" or "Top Left"
-	--
-	task.wait(0.5)
-end
+return Library
