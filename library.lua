@@ -1419,19 +1419,51 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 	SaViMap.Name = NeverLose.RandomString();
 	SaViMap.Parent = ColorPickerHandler
 	SaViMap.AnchorPoint = Vector2.new(0.5, 0)
-	SaViMap.BackgroundColor3 = Color3.fromRGB(255, 0, 4)
+	SaViMap.BackgroundColor3 = Color3.fromHSV(1, 1, 1)
+	SaViMap.BackgroundTransparency = 0
 	SaViMap.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	SaViMap.BorderSizePixel = 0
 	SaViMap.Position = UDim2.new(0.5, 0, 0, 5)
 	SaViMap.Size = UDim2.new(0, 185, 0, 185)
 	SaViMap.ZIndex = ZIndex + 126
-	SaViMap.Image = NeverLose.ImageColorMapping -- UNSAFE IMAGE
+	SaViMap.Image = ""
+	SaViMap.ImageTransparency = 1
+	SaViMap.ClipsDescendants = true
+
+	-- Horizontal: white → pure hue (saturation)
+	local SaViWhiteGrad = Instance.new("UIGradient")
+	SaViWhiteGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1)),
+	})
+	SaViWhiteGrad.Parent = SaViMap
+
+	-- Vertical: transparent → black (value)
+	local SaViValOverlay = Instance.new("Frame")
+	SaViValOverlay.Name = NeverLose.RandomString()
+	SaViValOverlay.Parent = SaViMap
+	SaViValOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	SaViValOverlay.BackgroundTransparency = 0
+	SaViValOverlay.BorderSizePixel = 0
+	SaViValOverlay.Size = UDim2.new(1, 0, 1, 0)
+	SaViValOverlay.ZIndex = ZIndex + 126
+	local SaViValGrad = Instance.new("UIGradient")
+	SaViValGrad.Rotation = 90
+	SaViValGrad.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	SaViValGrad.Parent = SaViValOverlay
 
 	UICorner_2.CornerRadius = UDim.new(0, 5)
 	UICorner_2.Parent = SaViMap
+	local SaViValCorner = Instance.new("UICorner")
+	SaViValCorner.CornerRadius = UDim.new(0, 5)
+	SaViValCorner.Parent = SaViValOverlay
 
 	ColorZoneSelection.Name = NeverLose.RandomString();
 	ColorZoneSelection.Parent = SaViMap
+	ColorZoneSelection.ZIndex = ZIndex + 128
 	ColorZoneSelection.AnchorPoint = Vector2.new(0.5, 0.5)
 	ColorZoneSelection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	ColorZoneSelection.BackgroundTransparency = 1.000
@@ -1579,14 +1611,19 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 
 	function ColorPickerLib:Update()
 		local RealColor = Color3.fromHSV(ColorPickerLib.H , ColorPickerLib.S , ColorPickerLib.V);
+		local pureHue = Color3.fromHSV(ColorPickerLib.H , 1 , 1);
 
 		NeverLose.PlayAnimate(ColorZoneSelection,ManualTween,{
 			Position = UDim2.fromScale(ColorPickerLib.S , 1 - ColorPickerLib.V)
 		});
 
-		NeverLose.PlayAnimate(SaViMap,ManualTween,{
-			BackgroundColor3 = Color3.fromHSV(ColorPickerLib.H , 1 , 1)
-		});
+		SaViMap.BackgroundColor3 = pureHue
+		if SaViWhiteGrad then
+			SaViWhiteGrad.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+				ColorSequenceKeypoint.new(1, pureHue),
+			})
+		end
 
 		NeverLose.PlayAnimate(ColorMapSelection,ManualTween,{
 			Position = UDim2.fromScale(ColorPickerLib.H,0.5)
@@ -1742,10 +1779,11 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Toggle.Name = NeverLose.RandomString();
 		Toggle.Parent = Handler
 		Toggle.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
+		Toggle.BackgroundTransparency = 0
 		Toggle.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Toggle.BorderSizePixel = 0
 		Toggle.ClipsDescendants = true
-		Toggle.Size = UDim2.new(0, 30, 0, 18)
+		Toggle.Size = UDim2.new(0, 34, 0, 16)
 		Toggle.ZIndex = ZINdex + 13
 		Toggle.LayoutOrder = -(#Handler:GetChildren() + 5);
 
@@ -1755,12 +1793,12 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Circle.Name = NeverLose.RandomString();
 		Circle.Parent = Toggle
 		Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-		Circle.BackgroundColor3 = Color3.fromRGB(160, 162, 170)
-		Circle.BackgroundTransparency = 0.15
+		Circle.BackgroundColor3 = Color3.fromRGB(150, 152, 160)
+		Circle.BackgroundTransparency = 0
 		Circle.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Circle.BorderSizePixel = 0
-		Circle.Position = UDim2.new(0.28, 0, 0.5, 0)
-		Circle.Size = UDim2.new(0, 16, 0, 16)
+		Circle.Position = UDim2.new(0.26, 0, 0.5, 0)
+		Circle.Size = UDim2.new(0, 12, 0, 12)
 		Circle.ZIndex = ZINdex + 14
 
 		UICorner_2.CornerRadius = UDim.new(1, 0)
@@ -1771,9 +1809,13 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		};
 
 		ToggleLib.SetUI = LPH_NO_VIRTUALIZE(function(value)
-			local accent = NeverLose.SectionAccent or NeverLose.AccentColor
+			local accent = NeverLose.SectionAccent or NeverLose.AccentColor or Color3.fromRGB(108, 101, 252)
 			if value then
-				-- ON: accent track, bright white knob (slightly inset)
+				-- ON: #6c65fc track + smaller white knob
+				Toggle.BackgroundTransparency = 0
+				Toggle.BackgroundColor3 = accent
+				Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				Circle.BackgroundTransparency = 0
 				NeverLose.PlayAnimate(Toggle, SlowyTween, {
 					BackgroundTransparency = 0,
 					BackgroundColor3 = accent,
@@ -1781,18 +1823,24 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 				NeverLose.PlayAnimate(Circle, SlowyTween, {
 					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 					BackgroundTransparency = 0,
-					Position = UDim2.new(0.72, 0, 0.5, 0),
+					Position = UDim2.new(0.74, 0, 0.5, 0),
+					Size = UDim2.new(0, 12, 0, 12),
 				})
 			else
-				-- OFF: grey track + muted grey knob
+				-- OFF: grey track + grey knob
+				Toggle.BackgroundTransparency = 0
+				Toggle.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
+				Circle.BackgroundColor3 = Color3.fromRGB(150, 152, 160)
+				Circle.BackgroundTransparency = 0
 				NeverLose.PlayAnimate(Toggle, SlowyTween, {
 					BackgroundTransparency = 0,
 					BackgroundColor3 = Color3.fromRGB(45, 48, 58),
 				})
 				NeverLose.PlayAnimate(Circle, SlowyTween, {
-					BackgroundColor3 = Color3.fromRGB(160, 162, 170),
-					BackgroundTransparency = 0.15,
-					Position = UDim2.new(0.28, 0, 0.5, 0),
+					BackgroundColor3 = Color3.fromRGB(150, 152, 160),
+					BackgroundTransparency = 0,
+					Position = UDim2.new(0.26, 0, 0.5, 0),
+					Size = UDim2.new(0, 12, 0, 12),
 				})
 			end;
 		end);
