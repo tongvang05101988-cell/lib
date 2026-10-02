@@ -4756,17 +4756,70 @@ function NeverLose:CreateWindow(Config)
 		local TabContentLabel = Instance.new("TextLabel")
 
 		Tab.Idx = TabButton;
+		Tab.SubTabs = {};
+		Tab.Expanded = false;
+		Tab.IsParent = true;
+
+		local TabGroup = Instance.new("Frame")
+		TabGroup.Name = NeverLose.RandomString()
+		TabGroup.Parent = LeftScrollingFrame
+		TabGroup.BackgroundTransparency = 1
+		TabGroup.BorderSizePixel = 0
+		TabGroup.Size = UDim2.new(1, -1, 0, 0)
+		TabGroup.AutomaticSize = Enum.AutomaticSize.Y
+		TabGroup.ZIndex = 8
+		Tab.Group = TabGroup
+
+		local GroupLayout = Instance.new("UIListLayout")
+		GroupLayout.Parent = TabGroup
+		GroupLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		GroupLayout.Padding = UDim.new(0, 2)
+
+		-- selection backdrop that grows over parent + open subtabs
+		local SelectBackdrop = Instance.new("Frame")
+		SelectBackdrop.Name = NeverLose.RandomString()
+		SelectBackdrop.Parent = TabGroup
+		SelectBackdrop.BackgroundColor3 = Color3.fromRGB(41, 45, 49)
+		SelectBackdrop.BackgroundTransparency = 1
+		SelectBackdrop.BorderSizePixel = 0
+		SelectBackdrop.Size = UDim2.new(1, 0, 1, 0)
+		SelectBackdrop.ZIndex = 7
+		local SelectCorner = Instance.new("UICorner")
+		SelectCorner.CornerRadius = UDim.new(0, 3)
+		SelectCorner.Parent = SelectBackdrop
+		Tab.SelectBackdrop = SelectBackdrop
 
 		TabButton.Name = NeverLose.RandomString();
-		TabButton.Parent = LeftScrollingFrame
+		TabButton.Parent = TabGroup
 		TabButton.BackgroundColor3 = Color3.fromRGB(41, 45, 49)
-		TabButton.BackgroundTransparency = 0.500
+		TabButton.BackgroundTransparency = 1
 		TabButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TabButton.BorderSizePixel = 0
-		TabButton.Size = UDim2.new(1, -1, 0, 30)
-		TabButton.ZIndex = 8
+		TabButton.Size = UDim2.new(1, 0, 0, 30)
+		TabButton.ZIndex = 9
+		TabButton.LayoutOrder = 0
 
-		UICorner.CornerRadius = UDim.new(0, 6)
+		local SubHolder = Instance.new("Frame")
+		SubHolder.Name = NeverLose.RandomString()
+		SubHolder.Parent = TabGroup
+		SubHolder.BackgroundTransparency = 1
+		SubHolder.BorderSizePixel = 0
+		SubHolder.Size = UDim2.new(1, 0, 0, 0)
+		SubHolder.AutomaticSize = Enum.AutomaticSize.Y
+		SubHolder.Visible = false
+		SubHolder.ZIndex = 8
+		SubHolder.LayoutOrder = 1
+		SubHolder.ClipsDescendants = false
+		local SubLayout = Instance.new("UIListLayout")
+		SubLayout.Parent = SubHolder
+		SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		SubLayout.Padding = UDim.new(0, 1)
+		local SubPad = Instance.new("UIPadding")
+		SubPad.PaddingLeft = UDim.new(0, 10)
+		SubPad.Parent = SubHolder
+		Tab.SubHolder = SubHolder
+
+		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = TabButton
 
 		TabIcon.Name = NeverLose.RandomString();
@@ -4784,6 +4837,22 @@ function NeverLose:CreateWindow(Config)
 		TabIcon.TextColor3 = NeverLose.AccentColor
 		TabIcon.TextSize = 16.000
 		TabIcon.TextWrapped = true
+
+		local TabChevron = Instance.new("TextLabel")
+		TabChevron.Name = NeverLose.RandomString()
+		TabChevron.Parent = TabButton
+		TabChevron.AnchorPoint = Vector2.new(1, 0.5)
+		TabChevron.BackgroundTransparency = 1
+		TabChevron.Position = UDim2.new(1, -6, 0.5, 0)
+		TabChevron.Size = UDim2.new(0, 16, 0, 16)
+		TabChevron.ZIndex = 10
+		TabChevron.FontFace = NeverLose.BuiltInRegular
+		TabChevron.Text = "chevron-small-right"
+		TabChevron.TextColor3 = Color3.fromRGB(160, 160, 165)
+		TabChevron.TextSize = 12
+		TabChevron.TextTransparency = 0.25
+		TabChevron.Visible = false
+		TabChevron.TextXAlignment = Enum.TextXAlignment.Center
 
 		TabContentLabel.Name = NeverLose.RandomString();
 		TabContentLabel.Parent = TabButton
@@ -4925,15 +4994,58 @@ function NeverLose:CreateWindow(Config)
 			Tab.SetValue(false);
 		end;
 
-		local over = NeverLose:CreateInput(TabButton,LPH_NO_VIRTUALIZE(function()
+		local function selectTabOnly(target)
 			for i,v in next , Window.Tabs do
-				if v.Idx == TabButton then
+				if v == target then
 					v.SetValue(true);
 					Window.CurrentTab = i;
 				else
 					v.SetValue(false);
 				end;
 			end;
+			-- refresh parent backdrops
+			for _,v in next , Window.Tabs do
+				if v.IsParent and v.SelectBackdrop then
+					local any = (Window.Tabs[Window.CurrentTab] == v)
+					if not any and v.SubTabs then
+						for _,s in next , v.SubTabs do
+							if Window.Tabs[Window.CurrentTab] == s then any = true break end
+						end
+					end
+					NeverLose.PlayAnimate(v.SelectBackdrop, SlowyTween, {
+						BackgroundTransparency = any and 0.55 or 1
+					})
+				end
+			end
+		end
+
+		local function setExpanded(state)
+			Tab.Expanded = state
+			if TabChevron then
+				TabChevron.Text = state and "chevron-small-down" or "chevron-small-right"
+			end
+			if SubHolder then
+				SubHolder.Visible = state
+			end
+		end
+		Tab.SetExpanded = setExpanded
+
+		local over = NeverLose:CreateInput(TabButton,LPH_NO_VIRTUALIZE(function()
+			if Tab.SubTabs and #Tab.SubTabs > 0 then
+				setExpanded(not Tab.Expanded)
+				if Tab.Expanded then
+					-- select first sub if none of this group selected
+					local has = false
+					for _,s in next , Tab.SubTabs do
+						if Window.Tabs[Window.CurrentTab] == s then has = true break end
+					end
+					if not has then
+						selectTabOnly(Tab.SubTabs[1])
+					end
+				end
+			else
+				selectTabOnly(Tab)
+			end
 		end));
 
 		NeverLose:AddSignal(over.MouseEnter:Connect(LPH_NO_VIRTUALIZE(function()
@@ -4983,6 +5095,218 @@ function NeverLose:CreateWindow(Config)
 				})
 			end;
 		end));
+
+
+		function Tab:AddSubTab(SubConfig)
+			SubConfig = NeverLose:ProcessParams(SubConfig , {
+				Icon = "circle-person",
+				Name = "Sub",
+				Type = Config.Type or "Double",
+			});
+
+			if TabChevron then
+				TabChevron.Visible = true
+			end
+
+			local SubTab = {
+				Signal = NeverLose:CreateSignal(false);
+				IsParent = false;
+				ParentTab = Tab;
+			};
+
+			local SubButton = Instance.new("Frame")
+			local SubCorner = Instance.new("UICorner")
+			local SubIcon = Instance.new("TextLabel")
+			local SubLabel = Instance.new("TextLabel")
+
+			SubTab.Idx = SubButton;
+
+			SubButton.Name = NeverLose.RandomString()
+			SubButton.Parent = SubHolder
+			SubButton.BackgroundColor3 = Color3.fromRGB(41, 45, 49)
+			SubButton.BackgroundTransparency = 1
+			SubButton.BorderSizePixel = 0
+			SubButton.Size = UDim2.new(1, -2, 0, 26)
+			SubButton.ZIndex = 10
+
+			SubCorner.CornerRadius = UDim.new(0, 3)
+			SubCorner.Parent = SubButton
+
+			SubIcon.Name = NeverLose.RandomString()
+			SubIcon.Parent = SubButton
+			SubIcon.AnchorPoint = Vector2.new(0, 0.5)
+			SubIcon.BackgroundTransparency = 1
+			SubIcon.Position = UDim2.new(0, 4, 0.5, 0)
+			SubIcon.Size = UDim2.new(0, 20, 0, 20)
+			SubIcon.ZIndex = 11
+			SubIcon.FontFace = NeverLose.BuiltInBold
+			SubIcon.Text = SubConfig.Icon
+			SubIcon.TextColor3 = Color3.fromRGB(150, 150, 155)
+			SubIcon.TextSize = 14
+			SubIcon.TextTransparency = 0.15
+			SubIcon.TextWrapped = true
+
+			SubLabel.Name = NeverLose.RandomString()
+			SubLabel.Parent = SubButton
+			SubLabel.BackgroundTransparency = 1
+			SubLabel.Position = UDim2.new(0, 28, 0, 0)
+			SubLabel.Size = UDim2.new(1, -32, 1, 0)
+			SubLabel.ZIndex = 11
+			SubLabel.Font = Enum.Font.GothamMedium
+			SubLabel.Text = SubConfig.Name
+			SubLabel.TextColor3 = Color3.fromRGB(200, 200, 205)
+			SubLabel.TextSize = 12
+			SubLabel.TextTransparency = 0.25
+			SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			-- content frame (same structure as parent tab)
+			local SubTabFrame = Instance.new("Frame")
+			local SubLeftScroll = Instance.new("ScrollingFrame")
+			local SubRightScroll = Instance.new("ScrollingFrame")
+			local SubUIListL = Instance.new("UIListLayout")
+			local SubUIListR = Instance.new("UIListLayout")
+
+			SubTabFrame.Name = NeverLose.RandomString()
+			SubTabFrame.BackgroundTransparency = 1
+			SubTabFrame.BorderSizePixel = 0
+			SubTabFrame.Size = UDim2.new(1, 0, 1, 0)
+			SubTabFrame.ZIndex = 5
+			SubTabFrame.Visible = false
+
+			SubLeftScroll.Name = NeverLose.RandomString()
+			SubLeftScroll.Parent = SubTabFrame
+			SubLeftScroll.Active = true
+			SubLeftScroll.AnchorPoint = Vector2.new(0.5, 0.5)
+			SubLeftScroll.BackgroundTransparency = 1
+			SubLeftScroll.BorderSizePixel = 0
+			SubLeftScroll.ClipsDescendants = false
+			SubLeftScroll.Position = UDim2.new(0.25, 0, 0.5, 0)
+			SubLeftScroll.Size = UDim2.new(0.5, 0, 1, -5)
+			SubLeftScroll.ScrollBarThickness = 0
+			SubUIListL.Parent = SubLeftScroll
+			SubUIListL.HorizontalAlignment = Enum.HorizontalAlignment.Right
+			SubUIListL.SortOrder = Enum.SortOrder.LayoutOrder
+			SubUIListL.Padding = UDim.new(0, 5)
+			NeverLose:AddSignal(SubUIListL:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(function()
+				SubLeftScroll.CanvasSize = UDim2.fromOffset(0, SubUIListL.AbsoluteContentSize.Y + 1)
+			end)))
+
+			SubRightScroll.Name = NeverLose.RandomString()
+			SubRightScroll.Parent = SubTabFrame
+			SubRightScroll.Active = true
+			SubRightScroll.AnchorPoint = Vector2.new(0.5, 0.5)
+			SubRightScroll.BackgroundTransparency = 1
+			SubRightScroll.BorderSizePixel = 0
+			SubRightScroll.ClipsDescendants = false
+			SubRightScroll.Position = UDim2.new(0.75, 0, 0.5, 0)
+			SubRightScroll.Size = UDim2.new(0.5, 0, 1, -5)
+			SubRightScroll.ScrollBarThickness = 0
+			SubUIListR.Parent = SubRightScroll
+			SubUIListR.SortOrder = Enum.SortOrder.LayoutOrder
+			SubUIListR.Padding = UDim.new(0, 5)
+
+			if SubConfig.Type == "Single" then
+				SubUIListR:Destroy()
+				SubRightScroll:Destroy()
+				SubRightScroll = SubLeftScroll
+				SubUIListR = SubUIListL
+				SubLeftScroll.Size = UDim2.new(1, 0, 1, -5)
+				SubLeftScroll.Position = UDim2.new(0.5, 0, 0.5, 0)
+			else
+				NeverLose:AddSignal(SubUIListR:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(function()
+					SubRightScroll.CanvasSize = UDim2.fromOffset(0, SubUIListR.AbsoluteContentSize.Y + 1)
+				end)))
+			end
+
+			SubTab.SetValue = LPH_NO_VIRTUALIZE(function(value)
+				SubTab.Signal:SetValue(value)
+				if value then
+					setExpanded(true)
+					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 0.45 })
+					NeverLose.PlayAnimate(SubIcon, SlowyTween, {
+						TextTransparency = 0,
+						TextColor3 = NeverLose.AccentColor,
+					})
+					NeverLose.PlayAnimate(SubLabel, SlowyTween, {
+						TextTransparency = 0,
+						TextColor3 = Color3.fromRGB(255, 255, 255),
+					})
+					SubUIListL.Parent = SubLeftScroll
+					if SubRightScroll ~= SubLeftScroll then SubUIListR.Parent = SubRightScroll end
+					SubTabFrame.Visible = true
+					SubTabFrame.Parent = TabContainer
+					if Tab.SelectBackdrop then
+						NeverLose.PlayAnimate(Tab.SelectBackdrop, SlowyTween, { BackgroundTransparency = 0.55 })
+					end
+					-- parent header stays soft-active
+					NeverLose.PlayAnimate(TabIcon, SlowyTween, {
+						TextTransparency = 0.15,
+						TextColor3 = NeverLose.AccentColor,
+					})
+					NeverLose.PlayAnimate(TabContentLabel, SlowyTween, { TextTransparency = 0.15 })
+				else
+					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 1 })
+					NeverLose.PlayAnimate(SubIcon, SlowyTween, {
+						TextTransparency = 0.35,
+						TextColor3 = Color3.fromRGB(150, 150, 155),
+					})
+					NeverLose.PlayAnimate(SubLabel, SlowyTween, {
+						TextTransparency = 0.35,
+						TextColor3 = Color3.fromRGB(200, 200, 205),
+					})
+					SubUIListL.Parent = nil
+					if SubRightScroll ~= SubLeftScroll then SubUIListR.Parent = nil end
+					SubTabFrame.Visible = false
+					SubTabFrame.Parent = nil
+				end
+			end)
+
+			NeverLose:AddSignal(SubIcon:GetPropertyChangedSignal('TextTransparency'):Connect(LPH_NO_VIRTUALIZE(function()
+				-- keep layout parent linked when visible via SetValue
+			end)))
+
+			table.insert(Tab.SubTabs, SubTab)
+			table.insert(Window.Tabs, SubTab)
+			SubTab.SetValue(false)
+
+			local subOver = NeverLose:CreateInput(SubButton, LPH_NO_VIRTUALIZE(function()
+				selectTabOnly(SubTab)
+			end))
+
+			NeverLose:AddSignal(subOver.MouseEnter:Connect(LPH_NO_VIRTUALIZE(function()
+				if Window.Tabs[Window.CurrentTab] ~= SubTab then
+					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 0.75 })
+				end
+			end)))
+			NeverLose:AddSignal(subOver.MouseLeave:Connect(LPH_NO_VIRTUALIZE(function()
+				if Window.Tabs[Window.CurrentTab] ~= SubTab then
+					NeverLose.PlayAnimate(SubButton, SlowyTween, { BackgroundTransparency = 1 })
+				end
+			end)))
+
+			function SubTab:AddSection(SecConfig)
+				SecConfig = NeverLose:ProcessParams(SecConfig, {
+					Name = "SECTION",
+					Position = "left",
+				})
+				-- reuse parent Tab:AddSection by temporarily binding scrolls
+				local oldL, oldR = LeftScroll, RightScroll
+				LeftScroll = SubLeftScroll
+				RightScroll = SubRightScroll
+				local section = Tab.AddSection(Tab, SecConfig)
+				LeftScroll = oldL
+				RightScroll = oldR
+				return section
+			end
+
+			-- auto-expand first group with subs on first sub create if first tab
+			if #Tab.SubTabs == 1 and Window.Tabs[Window.CurrentTab] == Tab then
+				-- parent was selected; switch to first sub
+				selectTabOnly(SubTab)
+			end
+
+			return SubTab
+		end
 
 		function Tab:AddSection(Config)
 			Config = NeverLose:ProcessParams(Config , {
