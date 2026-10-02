@@ -199,7 +199,7 @@ NeverLose.IconColor = Color3.fromRGB(255, 255, 255);
 NeverLose.ScreenGui = GlobalWindow;
 NeverLose.Flags = {};
 NeverLose.AccentColor = Color3.fromRGB(232, 162, 40); -- Blar.gg orange (tabs / header)
-NeverLose.SectionAccent = Color3.fromRGB(138, 110, 255); -- controls inside sections (toggles / sliders)
+NeverLose.SectionAccent = Color3.fromRGB(108, 101, 252); -- #6c65fc section controls (toggles / sliders)
 NeverLose.MainColor = Color3.fromRGB(8, 8, 13);
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
@@ -1741,7 +1741,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 
 		Toggle.Name = NeverLose.RandomString();
 		Toggle.Parent = Handler
-		Toggle.BackgroundColor3 = Color3.fromRGB(10, 13, 21)
+		Toggle.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
 		Toggle.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Toggle.BorderSizePixel = 0
 		Toggle.ClipsDescendants = true
@@ -1755,11 +1755,11 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		Circle.Name = NeverLose.RandomString();
 		Circle.Parent = Toggle
 		Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-		Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		Circle.BackgroundTransparency = 0.500
+		Circle.BackgroundColor3 = Color3.fromRGB(160, 162, 170)
+		Circle.BackgroundTransparency = 0.15
 		Circle.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Circle.BorderSizePixel = 0
-		Circle.Position = UDim2.new(0.300000012, 0, 0.5, 0)
+		Circle.Position = UDim2.new(0.28, 0, 0.5, 0)
 		Circle.Size = UDim2.new(0, 16, 0, 16)
 		Circle.ZIndex = ZINdex + 14
 
@@ -1771,27 +1771,28 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		};
 
 		ToggleLib.SetUI = LPH_NO_VIRTUALIZE(function(value)
+			local accent = NeverLose.SectionAccent or NeverLose.AccentColor
 			if value then
-				NeverLose.PlayAnimate(Toggle,SlowyTween,{
+				-- ON: accent track, bright white knob (slightly inset)
+				NeverLose.PlayAnimate(Toggle, SlowyTween, {
 					BackgroundTransparency = 0,
-					BackgroundColor3 = (NeverLose.SectionAccent or NeverLose.AccentColor)
+					BackgroundColor3 = accent,
 				})
-
-				NeverLose.PlayAnimate(Circle,SlowyTween,{
+				NeverLose.PlayAnimate(Circle, SlowyTween, {
 					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 					BackgroundTransparency = 0,
-					Position = UDim2.new(0.7, 0, 0.5, 0)
+					Position = UDim2.new(0.72, 0, 0.5, 0),
 				})
 			else
-				NeverLose.PlayAnimate(Toggle,SlowyTween,{
+				-- OFF: grey track + muted grey knob
+				NeverLose.PlayAnimate(Toggle, SlowyTween, {
 					BackgroundTransparency = 0,
-					BackgroundColor3 = Color3.fromRGB(10, 13, 21)
+					BackgroundColor3 = Color3.fromRGB(45, 48, 58),
 				})
-
-				NeverLose.PlayAnimate(Circle,SlowyTween,{
-					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-					BackgroundTransparency = 0.500,
-					Position = UDim2.new(0.300000012, 0, 0.5, 0)
+				NeverLose.PlayAnimate(Circle, SlowyTween, {
+					BackgroundColor3 = Color3.fromRGB(160, 162, 170),
+					BackgroundTransparency = 0.15,
+					Position = UDim2.new(0.28, 0, 0.5, 0),
 				})
 			end;
 		end);
