@@ -5223,7 +5223,7 @@ do -- Library
                 Parent = Outline_1
             })
             --
-            local Left = Library:CreateObject("Frame", {
+            local Left = Library:CreateObject("ScrollingFrame", {
                 BackgroundTransparency = 1,
                 Name = "Left",
                 BorderColor3 = Color3.fromRGB(0, 0, 0),
@@ -5232,6 +5232,15 @@ do -- Library
                 BorderSizePixel = 0,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 ClipsDescendants = true,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ScrollingDirection = Enum.ScrollingDirection.Y,
+                ScrollBarThickness = 3,
+                ScrollBarImageColor3 = Color3.fromRGB(65, 65, 65),
+                MidImage = "rbxassetid://158362264",
+                TopImage = "rbxassetid://158362264",
+                BottomImage = "rbxassetid://158362264",
+                ElasticBehavior = Enum.ElasticBehavior.Never,
                 Parent = SectionsHolder
             })
             --
@@ -5249,7 +5258,7 @@ do -- Library
                 Parent = Left
             })
             --
-            local Right = Library:CreateObject("Frame", {
+            local Right = Library:CreateObject("ScrollingFrame", {
                 Name = "Right",
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0.5, 1, 0, 0),
@@ -5258,6 +5267,15 @@ do -- Library
                 BorderSizePixel = 0,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 ClipsDescendants = true,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ScrollingDirection = Enum.ScrollingDirection.Y,
+                ScrollBarThickness = 3,
+                ScrollBarImageColor3 = Color3.fromRGB(65, 65, 65),
+                MidImage = "rbxassetid://158362264",
+                TopImage = "rbxassetid://158362264",
+                BottomImage = "rbxassetid://158362264",
+                ElasticBehavior = Enum.ElasticBehavior.Never,
                 Parent = SectionsHolder
             })
             --
@@ -5434,7 +5452,8 @@ do -- Library
                 local SectionOutline = Library:CreateObject("Frame", {
                     Name = "SectionOutline",
                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Size = UDim2.new(1, 0, 0, Options.Size),
+                    -- non-fill: grow with content (column scrolls). fill: later sized to remaining space
+                    Size = Options.Fill and UDim2.new(1, 0, 0, 40) or UDim2.new(1, 0, 0, 0),
                     AutomaticSize = Options.Fill and Enum.AutomaticSize.None or Enum.AutomaticSize.Y,
                     BorderSizePixel = 0,
                     ZIndex = 1,
@@ -5445,14 +5464,15 @@ do -- Library
                 table.insert(Tab.Sides[Options.Side].Sections, SectionOutline)
                 --
                 task.delay(0.01, function()
+                    if not SectionOutline or not SectionOutline.Parent then return end
                     if Options.Fill == false then
-                        Tab.Sides[Options.Side].Sizes += SectionOutline.AbsoluteSize.Y + 19
-                    end
-                    --
-                    if Options.Fill then
-                        SectionOutline.Size = UDim2.new(1, 0, 1, -(Tab.Sides[Options.Side].Sizes))
+                        -- keep AutomaticSize.Y — height follows content; parent column scrolls
+                        SectionOutline.AutomaticSize = Enum.AutomaticSize.Y
+                        SectionOutline.Size = UDim2.new(1, 0, 0, 0)
+                        Tab.Sides[Options.Side].Sizes += math.max(SectionOutline.AbsoluteSize.Y, 0) + 19
                     else
-                        SectionOutline.Size = UDim2.new(1, 0, 0, Options.Size)
+                        SectionOutline.AutomaticSize = Enum.AutomaticSize.None
+                        SectionOutline.Size = UDim2.new(1, 0, 1, -(Tab.Sides[Options.Side].Sizes))
                     end
                 end)
                 --
@@ -5460,7 +5480,8 @@ do -- Library
                     Name = "SectionInline",
                     Position = UDim2.new(0, 1, 0, 1),
                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    Size = UDim2.new(1, -2, 1, -2),
+                    Size = Options.Fill and UDim2.new(1, -2, 1, -2) or UDim2.new(1, -2, 0, 0),
+                    AutomaticSize = Options.Fill and Enum.AutomaticSize.None or Enum.AutomaticSize.Y,
                     BorderSizePixel = 0,
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40),
                     Parent = SectionOutline
@@ -5471,8 +5492,10 @@ do -- Library
                     MidImage = "rbxassetid://158362264",
                     Active = true,
                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                    ScrollBarThickness = 5,
-                    Size = UDim2.new(1, -2, 1, -2),
+                    ScrollBarThickness = Options.Fill and 5 or 0,
+                    Size = Options.Fill and UDim2.new(1, -2, 1, -2) or UDim2.new(1, -2, 0, 0),
+                    AutomaticSize = Options.Fill and Enum.AutomaticSize.None or Enum.AutomaticSize.Y,
+                    ScrollingEnabled = Options.Fill and true or false,
                     TopImage = "rbxassetid://158362264",
                     Position = UDim2.new(0, 1, 0, 1),
                     CanvasSize = UDim2.new(0, 0, 0, 0),
