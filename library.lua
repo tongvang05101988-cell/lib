@@ -1419,7 +1419,8 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 	SaViMap.Name = NeverLose.RandomString();
 	SaViMap.Parent = ColorPickerHandler
 	SaViMap.AnchorPoint = Vector2.new(0.5, 0)
-	SaViMap.BackgroundColor3 = Color3.fromHSV(1, 1, 1)
+	-- White base — required for correct white→hue blend
+	SaViMap.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	SaViMap.BackgroundTransparency = 0
 	SaViMap.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	SaViMap.BorderSizePixel = 0
@@ -1430,15 +1431,16 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 	SaViMap.ImageTransparency = 1
 	SaViMap.ClipsDescendants = true
 
-	-- Horizontal: white → pure hue (saturation)
+	-- Horizontal saturation: white (left) → pure hue (right)
 	local SaViWhiteGrad = Instance.new("UIGradient")
+	SaViWhiteGrad.Rotation = 0
 	SaViWhiteGrad.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1)),
+		ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1.00, Color3.fromHSV(0, 1, 1)),
 	})
 	SaViWhiteGrad.Parent = SaViMap
 
-	-- Vertical: transparent → black (value)
+	-- Vertical value: no darkening at top → black at bottom
 	local SaViValOverlay = Instance.new("Frame")
 	SaViValOverlay.Name = NeverLose.RandomString()
 	SaViValOverlay.Parent = SaViMap
@@ -1449,9 +1451,10 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 	SaViValOverlay.ZIndex = ZIndex + 126
 	local SaViValGrad = Instance.new("UIGradient")
 	SaViValGrad.Rotation = 90
+	SaViValGrad.Color = ColorSequence.new(Color3.fromRGB(0, 0, 0))
 	SaViValGrad.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 1),
-		NumberSequenceKeypoint.new(1, 0),
+		NumberSequenceKeypoint.new(0.00, 1.00),
+		NumberSequenceKeypoint.new(1.00, 0.00),
 	})
 	SaViValGrad.Parent = SaViValOverlay
 
@@ -1604,7 +1607,7 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 
 	ColorPickerLib.SetRender(false);
 	ColorPickerLib.Root = ColorPickerHandler;
-	ColorPickerLib.H = 1;
+	ColorPickerLib.H = 0;
 	ColorPickerLib.S = 1;
 	ColorPickerLib.V = 1;
 	ColorPickerLib.Callback = EmptyFunction;
@@ -1613,25 +1616,24 @@ function NeverLose:CreateColorPicker(HandleFrame: Frame)
 		local RealColor = Color3.fromHSV(ColorPickerLib.H , ColorPickerLib.S , ColorPickerLib.V);
 		local pureHue = Color3.fromHSV(ColorPickerLib.H , 1 , 1);
 
-		NeverLose.PlayAnimate(ColorZoneSelection,ManualTween,{
-			Position = UDim2.fromScale(ColorPickerLib.S , 1 - ColorPickerLib.V)
-		});
+		-- Cursor follows S/V (top-left = white, top-right = pure hue, bottom = black)
+		ColorZoneSelection.Position = UDim2.fromScale(ColorPickerLib.S , 1 - ColorPickerLib.V)
 
-		SaViMap.BackgroundColor3 = pureHue
+		-- White base so horizontal gradient blends correctly (white → pure hue)
+		SaViMap.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		SaViMap.BackgroundTransparency = 0
 		if SaViWhiteGrad then
 			SaViWhiteGrad.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-				ColorSequenceKeypoint.new(1, pureHue),
+				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
+				ColorSequenceKeypoint.new(1.00, pureHue),
 			})
 		end
 
-		NeverLose.PlayAnimate(ColorMapSelection,ManualTween,{
-			Position = UDim2.fromScale(ColorPickerLib.H,0.5)
-		});
+		ColorMapSelection.Position = UDim2.fromScale(ColorPickerLib.H, 0.5)
 
-		RGBLabel.Text = "#"..RealColor:ToHex();
+		RGBLabel.Text = "#"..RealColor:ToHex()
 
-		ColorPickerLib.Callback(RealColor);
+		ColorPickerLib.Callback(RealColor)
 	end;
 
 	function ColorPickerLib:SetValue(Color)
