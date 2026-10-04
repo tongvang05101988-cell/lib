@@ -198,8 +198,8 @@ NeverLose.Scales = {
 NeverLose.IconColor = Color3.fromRGB(255, 255, 255);
 NeverLose.ScreenGui = GlobalWindow;
 NeverLose.Flags = {};
-NeverLose.AccentColor = Color3.fromRGB(232, 162, 40); -- Blar.gg orange (tabs / header)
-NeverLose.SectionAccent = Color3.fromRGB(108, 101, 252); -- #6c65fc section controls (toggles / sliders)
+NeverLose.AccentColor = Color3.fromRGB(245, 92, 176); -- zovii.vip pink
+NeverLose.SectionAccent = Color3.fromRGB(245, 92, 176); -- same pink for section controls
 NeverLose.MainColor = Color3.fromRGB(8, 8, 13);
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
@@ -1811,7 +1811,7 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		};
 
 		ToggleLib.SetUI = LPH_NO_VIRTUALIZE(function(value)
-			local accent = NeverLose.SectionAccent or NeverLose.AccentColor or Color3.fromRGB(108, 101, 252)
+			local accent = NeverLose.SectionAccent or NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
 			if value then
 				-- ON: #6c65fc track + smaller white knob
 				Toggle.BackgroundTransparency = 0
@@ -2376,11 +2376,25 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		local BackendM = NeverLose:CreateColorPicker(ColorPicker);
 
 		BackendM:SetValue(Config.Default)
+		ColorPicker.BackgroundColor3 = Config.Default
 		BackendM.Callback = function(color)
 			ColorPicker.BackgroundColor3 = color;
 			Config.Default = color;
 			Config.Callback(Config.Default);
 		end;
+		ColorPickerLib.SetValue = function(self, c)
+			if typeof(c) == "string" then
+				c = Color3.fromHex(c:gsub("#",""))
+			end
+			if typeof(c) ~= "Color3" then return end
+			BackendM:SetValue(c)
+			ColorPicker.BackgroundColor3 = c
+			Config.Default = c
+		end
+		ColorPickerLib.GetValue = function()
+			return Config.Default
+		end
+		ColorPickerLib.Root = ColorPicker
 
 		local signal;
 		NeverLose:CreateInput(ColorPicker , LPH_NO_VIRTUALIZE(function()
@@ -4248,7 +4262,7 @@ function NeverLose:CreateWindow(Config)
 	UICorner_2.Parent = LogoImage
 
 	do
-		local accent = NeverLose.AccentColor or Color3.fromRGB(232, 162, 40)
+		local accent = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
 		local ar = math.floor(accent.R * 255 + 0.5)
 		local ag = math.floor(accent.G * 255 + 0.5)
 		local ab = math.floor(accent.B * 255 + 0.5)
