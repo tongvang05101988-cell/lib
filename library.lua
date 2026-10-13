@@ -3779,7 +3779,7 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 
 		UserFrame.Name = NeverLose.RandomString();
 		UserFrame.Parent = Frame
-		UserFrame.BackgroundColor3 = Color3.fromRGB(25, 27, 33)
+		UserFrame.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17)
 		UserFrame.BackgroundTransparency = 1.000
 		UserFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		UserFrame.BorderSizePixel = 0
@@ -4403,13 +4403,13 @@ function NeverLose:CreateWindow(Config)
 	LineFrame_2.Name = NeverLose.RandomString();
 	LineFrame_2.Parent = BottomFrame
 	LineFrame_2.AnchorPoint = Vector2.new(0.5, 0)
-	LineFrame_2.BackgroundColor3 = Color3.fromRGB(55, 58, 68)
-	LineFrame_2.BackgroundTransparency = 0.35
+	LineFrame_2.BackgroundColor3 = Color3.fromRGB(70, 72, 82)
+	LineFrame_2.BackgroundTransparency = 0.2
 	LineFrame_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	LineFrame_2.BorderSizePixel = 0
 	LineFrame_2.Position = UDim2.new(0.5, 0, 0, 0)
-	LineFrame_2.Size = UDim2.new(1, -10, 0, 1)
-	LineFrame_2.ZIndex = 12
+	LineFrame_2.Size = UDim2.new(1, -12, 0, 1)
+	LineFrame_2.ZIndex = 15
 
 	UserSettingButton.Name = NeverLose.RandomString();
 	UserSettingButton.Parent = BottomFrame
@@ -4457,59 +4457,96 @@ function NeverLose:CreateWindow(Config)
 	UICorner_4.CornerRadius = UDim.new(0, 3)
 	UICorner_4.Parent = RightMenuFrame
 
-	-- zovii.vip style: + grid only on sections panel (RightMenuFrame), mouse lights nearby crosses
+	-- zovii.vip: + grid + soft pink ambient ONLY on sections panel (not tab list)
 	do
 		local accent = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
-		local gridFolder = Instance.new("Folder")
-		gridFolder.Name = NeverLose.RandomString()
-		gridFolder.Parent = RightMenuFrame
+		local ZG = 8 -- behind section UI (z 9+)
+
+		local bgLayer = Instance.new("Frame")
+		bgLayer.Name = NeverLose.RandomString()
+		bgLayer.BackgroundTransparency = 1
+		bgLayer.Size = UDim2.fromScale(1, 1)
+		bgLayer.Position = UDim2.fromScale(0, 0)
+		bgLayer.ZIndex = ZG
+		bgLayer.ClipsDescendants = true
+		bgLayer.Parent = RightMenuFrame
+
+		local function softGlow(anchor, pos, size)
+			local g = Instance.new("Frame")
+			g.AnchorPoint = anchor
+			g.Position = pos
+			g.Size = UDim2.fromOffset(size, size)
+			g.BackgroundColor3 = accent
+			g.BackgroundTransparency = 0.90
+			g.BorderSizePixel = 0
+			g.ZIndex = ZG
+			g.Parent = bgLayer
+			Instance.new("UICorner", g).CornerRadius = UDim.new(1, 0)
+			local gr = Instance.new("UIGradient")
+			gr.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0.00, 0.15),
+				NumberSequenceKeypoint.new(0.50, 0.55),
+				NumberSequenceKeypoint.new(1.00, 1.00),
+			})
+			gr.Parent = g
+			return g
+		end
+		local ambTL = softGlow(Vector2.new(0, 0), UDim2.fromScale(0, 0), 320)
+		local ambTR = softGlow(Vector2.new(1, 0), UDim2.fromScale(1, 0), 240)
+		local ambBL = softGlow(Vector2.new(0, 1), UDim2.fromScale(0, 1), 240)
+		local ambBR = softGlow(Vector2.new(1, 1), UDim2.fromScale(1, 1), 320)
 
 		local crosses = {}
-		local SPACING = 36
-		local CROSS_SIZE = 8
+		local SPACING = 28
+		local CROSS = 9
+		local IDLE_T = 0.78
+		local HOT_T = 0.25
 
-		local function makeCross(x, y)
+		local function makeCross(px, py)
 			local holder = Instance.new("Frame")
-			holder.Name = NeverLose.RandomString()
 			holder.BackgroundTransparency = 1
-			holder.Size = UDim2.fromOffset(CROSS_SIZE, CROSS_SIZE)
-			holder.Position = UDim2.fromOffset(x, y)
-			holder.ZIndex = 8
-			holder.Parent = gridFolder
+			holder.Size = UDim2.fromOffset(CROSS, CROSS)
+			holder.Position = UDim2.fromOffset(px, py)
+			holder.ZIndex = ZG
+			holder.Parent = bgLayer
 			local h = Instance.new("Frame")
 			h.AnchorPoint = Vector2.new(0.5, 0.5)
 			h.Position = UDim2.fromScale(0.5, 0.5)
-			h.Size = UDim2.fromOffset(CROSS_SIZE, 1)
-			h.BackgroundColor3 = Color3.fromRGB(180, 180, 190)
-			h.BackgroundTransparency = 0.88
+			h.Size = UDim2.fromOffset(CROSS, 1)
+			h.BackgroundColor3 = Color3.fromRGB(160, 155, 175)
+			h.BackgroundTransparency = IDLE_T
 			h.BorderSizePixel = 0
-			h.ZIndex = 8
+			h.ZIndex = ZG
 			h.Parent = holder
 			local v = Instance.new("Frame")
 			v.AnchorPoint = Vector2.new(0.5, 0.5)
 			v.Position = UDim2.fromScale(0.5, 0.5)
-			v.Size = UDim2.fromOffset(1, CROSS_SIZE)
-			v.BackgroundColor3 = Color3.fromRGB(180, 180, 190)
-			v.BackgroundTransparency = 0.88
+			v.Size = UDim2.fromOffset(1, CROSS)
+			v.BackgroundColor3 = Color3.fromRGB(160, 155, 175)
+			v.BackgroundTransparency = IDLE_T
 			v.BorderSizePixel = 0
-			v.ZIndex = 8
+			v.ZIndex = ZG
 			v.Parent = holder
-			return { holder = holder, h = h, v = v, lx = x + CROSS_SIZE * 0.5, ly = y + CROSS_SIZE * 0.5 }
+			return { holder = holder, h = h, v = v, x = px + CROSS * 0.5, y = py + CROSS * 0.5 }
 		end
 
 		local function rebuildGrid()
-			for _, c in ipairs(crosses) do
-				pcall(function() c.holder:Destroy() end)
+			for i = 1, #crosses do
+				pcall(function() crosses[i].holder:Destroy() end)
 			end
 			table.clear(crosses)
-			local w = math.max(RightMenuFrame.AbsoluteSize.X, 200)
-			local hgt = math.max(RightMenuFrame.AbsoluteSize.Y, 200)
-			local cols = math.floor(w / SPACING)
-			local rows = math.floor(hgt / SPACING)
-			local ox = (w - cols * SPACING) * 0.5
-			local oy = (hgt - rows * SPACING) * 0.5
-			for r = 0, rows do
-				for c = 0, cols do
+
+			local w = RightMenuFrame.AbsoluteSize.X
+			local hgt = RightMenuFrame.AbsoluteSize.Y
+			if w < 50 then w = math.max(200, (Window.Size and Window.Size.X.Offset or 680) - 176) end
+			if hgt < 50 then hgt = math.max(200, (Window.Size and Window.Size.Y.Offset or 520)) end
+
+			local cols = math.max(4, math.floor(w / SPACING))
+			local rows = math.max(4, math.floor(hgt / SPACING))
+			local ox = (w - (cols - 1) * SPACING) * 0.5 - CROSS * 0.5
+			local oy = (hgt - (rows - 1) * SPACING) * 0.5 - CROSS * 0.5
+			for r = 0, rows - 1 do
+				for c = 0, cols - 1 do
 					crosses[#crosses + 1] = makeCross(
 						math.floor(ox + c * SPACING),
 						math.floor(oy + r * SPACING)
@@ -4519,60 +4556,45 @@ function NeverLose:CreateWindow(Config)
 		end
 
 		task.defer(rebuildGrid)
+		task.delay(0.15, rebuildGrid)
+		task.delay(0.5, rebuildGrid)
 		NeverLose:AddSignal(RightMenuFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 			task.defer(rebuildGrid)
 		end))
 
-		-- soft corner ambient on sections only
-		local function softGlow(anchor, pos)
-			local g = Instance.new("Frame")
-			g.AnchorPoint = anchor
-			g.Position = pos
-			g.Size = UDim2.fromOffset(200, 200)
-			g.BackgroundColor3 = accent
-			g.BackgroundTransparency = 0.96
-			g.BorderSizePixel = 0
-			g.ZIndex = 8
-			g.Parent = RightMenuFrame
-			Instance.new("UICorner", g).CornerRadius = UDim.new(1, 0)
-			local gr = Instance.new("UIGradient")
-			gr.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 0.4),
-				NumberSequenceKeypoint.new(1, 1),
-			})
-			gr.Parent = g
-			return g
-		end
-		local ambTL = softGlow(Vector2.new(0, 0), UDim2.fromScale(0, 0))
-		local ambBR = softGlow(Vector2.new(1, 1), UDim2.fromScale(1, 1))
-
+		local lastUpdate = 0
 		NeverLose:AddSignal(UserInputService.InputChanged:Connect(function(input)
 			if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
-			if not RightMenuFrame.Parent or not RightMenuFrame.Visible then return end
+			if not RightMenuFrame.Visible or not RightMenuFrame.Parent then return end
+			local now = os.clock()
+			if now - lastUpdate < 0.03 then return end
+			lastUpdate = now
+
 			local mp = UserInputService:GetMouseLocation()
 			local origin = RightMenuFrame.AbsolutePosition
 			local localX = mp.X - origin.X
 			local localY = mp.Y - origin.Y
 			local a = NeverLose.AccentColor or accent
-			local radius = 90
-			for _, c in ipairs(crosses) do
-				local dx = localX - c.lx
-				local dy = localY - c.ly
+			local radius = 110
+
+			for i = 1, #crosses do
+				local c = crosses[i]
+				local dx = localX - c.x
+				local dy = localY - c.y
 				local dist = math.sqrt(dx * dx + dy * dy)
 				local t = math.clamp(dist / radius, 0, 1)
-				-- near = bright white/pink, far = almost invisible
-				local trans = 0.45 + t * 0.48
-				local col = Color3.fromRGB(220, 220, 230):Lerp(a, (1 - t) * 0.55)
+				local trans = HOT_T + (IDLE_T - HOT_T) * t
+				local col = Color3.fromRGB(200, 195, 210):Lerp(a, (1 - t) * 0.7)
 				c.h.BackgroundTransparency = trans
 				c.v.BackgroundTransparency = trans
 				c.h.BackgroundColor3 = col
 				c.v.BackgroundColor3 = col
 			end
-			-- mild ambient pulse near mouse corners of panel
-			pcall(function()
-				ambTL.BackgroundColor3 = a
-				ambBR.BackgroundColor3 = a
-			end)
+
+			ambTL.BackgroundColor3 = a
+			ambTR.BackgroundColor3 = a
+			ambBL.BackgroundColor3 = a
+			ambBR.BackgroundColor3 = a
 		end))
 	end
 
