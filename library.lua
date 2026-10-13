@@ -4457,50 +4457,53 @@ function NeverLose:CreateWindow(Config)
 	UICorner_4.CornerRadius = UDim.new(0, 3)
 	UICorner_4.Parent = RightMenuFrame
 
-	-- zovii.vip: + grid + soft pink ambient ONLY on sections panel (not tab list)
+	-- zovii.vip: subtle + grid behind sections only (no circular glow orbs)
+	-- placed below RightHeader; rebuilt after TabContainer exists
 	do
 		local accent = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
-		local ZG = 8 -- behind section UI (z 9+)
+		local ZG = 8
 
 		local bgLayer = Instance.new("Frame")
 		bgLayer.Name = NeverLose.RandomString()
 		bgLayer.BackgroundTransparency = 1
-		bgLayer.Size = UDim2.fromScale(1, 1)
-		bgLayer.Position = UDim2.fromScale(0, 0)
+		-- stay under header (config / search) — sections body only
+		bgLayer.Position = UDim2.new(0, 0, 0, 50)
+		bgLayer.Size = UDim2.new(1, 0, 1, -50)
 		bgLayer.ZIndex = ZG
 		bgLayer.ClipsDescendants = true
 		bgLayer.Parent = RightMenuFrame
 
-		local function softGlow(anchor, pos, size)
+		-- very soft edge wash (gradient strip, NOT circular orbs)
+		local function edgeWash(anchor, pos, size, rotation)
 			local g = Instance.new("Frame")
 			g.AnchorPoint = anchor
 			g.Position = pos
-			g.Size = UDim2.fromOffset(size, size)
+			g.Size = size
 			g.BackgroundColor3 = accent
-			g.BackgroundTransparency = 0.90
+			g.BackgroundTransparency = 0.94
 			g.BorderSizePixel = 0
 			g.ZIndex = ZG
 			g.Parent = bgLayer
-			Instance.new("UICorner", g).CornerRadius = UDim.new(1, 0)
 			local gr = Instance.new("UIGradient")
+			gr.Rotation = rotation
 			gr.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0.00, 0.15),
-				NumberSequenceKeypoint.new(0.50, 0.55),
+				NumberSequenceKeypoint.new(0.00, 0.35),
+				NumberSequenceKeypoint.new(0.55, 0.85),
 				NumberSequenceKeypoint.new(1.00, 1.00),
 			})
 			gr.Parent = g
 			return g
 		end
-		local ambTL = softGlow(Vector2.new(0, 0), UDim2.fromScale(0, 0), 320)
-		local ambTR = softGlow(Vector2.new(1, 0), UDim2.fromScale(1, 0), 240)
-		local ambBL = softGlow(Vector2.new(0, 1), UDim2.fromScale(0, 1), 240)
-		local ambBR = softGlow(Vector2.new(1, 1), UDim2.fromScale(1, 1), 320)
+		-- faint top-left / bottom-right washes only
+		edgeWash(Vector2.new(0, 0), UDim2.fromScale(0, 0), UDim2.new(0.55, 0, 0.45, 0), 135)
+		edgeWash(Vector2.new(1, 1), UDim2.fromScale(1, 1), UDim2.new(0.5, 0, 0.4, 0), -45)
 
 		local crosses = {}
-		local SPACING = 28
-		local CROSS = 9
-		local IDLE_T = 0.78
-		local HOT_T = 0.25
+		local SPACING = 44   -- more spaced out
+		local CROSS = 5      -- smaller
+		local IDLE_T = 0.90  -- more greyed / faded
+		local HOT_T = 0.55   -- still subtle when near mouse
+		local IDLE_COL = Color3.fromRGB(90, 90, 100)
 
 		local function makeCross(px, py)
 			local holder = Instance.new("Frame")
@@ -4513,7 +4516,7 @@ function NeverLose:CreateWindow(Config)
 			h.AnchorPoint = Vector2.new(0.5, 0.5)
 			h.Position = UDim2.fromScale(0.5, 0.5)
 			h.Size = UDim2.fromOffset(CROSS, 1)
-			h.BackgroundColor3 = Color3.fromRGB(160, 155, 175)
+			h.BackgroundColor3 = IDLE_COL
 			h.BackgroundTransparency = IDLE_T
 			h.BorderSizePixel = 0
 			h.ZIndex = ZG
@@ -4522,7 +4525,7 @@ function NeverLose:CreateWindow(Config)
 			v.AnchorPoint = Vector2.new(0.5, 0.5)
 			v.Position = UDim2.fromScale(0.5, 0.5)
 			v.Size = UDim2.fromOffset(1, CROSS)
-			v.BackgroundColor3 = Color3.fromRGB(160, 155, 175)
+			v.BackgroundColor3 = IDLE_COL
 			v.BackgroundTransparency = IDLE_T
 			v.BorderSizePixel = 0
 			v.ZIndex = ZG
@@ -4536,13 +4539,13 @@ function NeverLose:CreateWindow(Config)
 			end
 			table.clear(crosses)
 
-			local w = RightMenuFrame.AbsoluteSize.X
-			local hgt = RightMenuFrame.AbsoluteSize.Y
-			if w < 50 then w = math.max(200, (Window.Size and Window.Size.X.Offset or 680) - 176) end
-			if hgt < 50 then hgt = math.max(200, (Window.Size and Window.Size.Y.Offset or 520)) end
+			local w = bgLayer.AbsoluteSize.X
+			local hgt = bgLayer.AbsoluteSize.Y
+			if w < 40 then w = math.max(180, (Window.Size and Window.Size.X.Offset or 680) - 176) end
+			if hgt < 40 then hgt = math.max(180, (Window.Size and Window.Size.Y.Offset or 520) - 50) end
 
-			local cols = math.max(4, math.floor(w / SPACING))
-			local rows = math.max(4, math.floor(hgt / SPACING))
+			local cols = math.max(3, math.floor(w / SPACING))
+			local rows = math.max(3, math.floor(hgt / SPACING))
 			local ox = (w - (cols - 1) * SPACING) * 0.5 - CROSS * 0.5
 			local oy = (hgt - (rows - 1) * SPACING) * 0.5 - CROSS * 0.5
 			for r = 0, rows - 1 do
@@ -4556,8 +4559,8 @@ function NeverLose:CreateWindow(Config)
 		end
 
 		task.defer(rebuildGrid)
-		task.delay(0.15, rebuildGrid)
-		task.delay(0.5, rebuildGrid)
+		task.delay(0.2, rebuildGrid)
+		task.delay(0.6, rebuildGrid)
 		NeverLose:AddSignal(RightMenuFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 			task.defer(rebuildGrid)
 		end))
@@ -4567,15 +4570,15 @@ function NeverLose:CreateWindow(Config)
 			if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
 			if not RightMenuFrame.Visible or not RightMenuFrame.Parent then return end
 			local now = os.clock()
-			if now - lastUpdate < 0.03 then return end
+			if now - lastUpdate < 0.04 then return end
 			lastUpdate = now
 
 			local mp = UserInputService:GetMouseLocation()
-			local origin = RightMenuFrame.AbsolutePosition
+			local origin = bgLayer.AbsolutePosition
 			local localX = mp.X - origin.X
 			local localY = mp.Y - origin.Y
 			local a = NeverLose.AccentColor or accent
-			local radius = 110
+			local radius = 85
 
 			for i = 1, #crosses do
 				local c = crosses[i]
@@ -4584,17 +4587,12 @@ function NeverLose:CreateWindow(Config)
 				local dist = math.sqrt(dx * dx + dy * dy)
 				local t = math.clamp(dist / radius, 0, 1)
 				local trans = HOT_T + (IDLE_T - HOT_T) * t
-				local col = Color3.fromRGB(200, 195, 210):Lerp(a, (1 - t) * 0.7)
+				local col = IDLE_COL:Lerp(a, (1 - t) * 0.45)
 				c.h.BackgroundTransparency = trans
 				c.v.BackgroundTransparency = trans
 				c.h.BackgroundColor3 = col
 				c.v.BackgroundColor3 = col
 			end
-
-			ambTL.BackgroundColor3 = a
-			ambTR.BackgroundColor3 = a
-			ambBL.BackgroundColor3 = a
-			ambBR.BackgroundColor3 = a
 		end))
 	end
 
@@ -5635,7 +5633,7 @@ function NeverLose:CreateWindow(Config)
 			SectionHandler.Parent = SectionFrame
 			SectionHandler.AnchorPoint = Vector2.new(0.5, 0)
 			SectionHandler.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
-			SectionHandler.BackgroundTransparency = 0.2
+			SectionHandler.BackgroundTransparency = 0
 			SectionHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionHandler.BorderSizePixel = 0
 			SectionHandler.ClipsDescendants = true
@@ -5677,7 +5675,7 @@ function NeverLose:CreateWindow(Config)
 					})
 
 					NeverLose.PlayAnimate(SectionHandler,SlowyTween,{
-						BackgroundTransparency = 0.2
+						BackgroundTransparency = 0
 					})
 
 					NeverLose.PlayAnimate(UIStroke,SlowyTween,{
