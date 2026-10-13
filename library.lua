@@ -3992,51 +3992,114 @@ function NeverLose:CreateWindow(Config)
 		WindowFrame.BackgroundTransparency = 0.01
 	end;
 
-	-- Corner ambient glow / soft flicker (accent-tinted)
+	-- zovii.vip style: soft corner ambient + mouse-reactive + marks
 	do
 		local accent = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
-		local function makeGlow(anchor, pos)
+		local corners = {}
+
+		local function makeAmbient(anchor, pos)
 			local glow = Instance.new("Frame")
 			glow.Name = NeverLose.RandomString()
 			glow.AnchorPoint = anchor
 			glow.Position = pos
-			glow.Size = UDim2.fromOffset(220, 220)
+			glow.Size = UDim2.fromOffset(280, 280)
 			glow.BackgroundColor3 = accent
-			glow.BackgroundTransparency = 0.88
+			glow.BackgroundTransparency = 0.94
 			glow.BorderSizePixel = 0
 			glow.ZIndex = 1
 			glow.Parent = WindowFrame
 			Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0)
 			local grad = Instance.new("UIGradient")
 			grad.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 0.25),
-				NumberSequenceKeypoint.new(0.55, 0.75),
+				NumberSequenceKeypoint.new(0, 0.35),
+				NumberSequenceKeypoint.new(0.45, 0.7),
 				NumberSequenceKeypoint.new(1, 1),
 			})
 			grad.Parent = glow
 			return glow
 		end
-		local gTL = makeGlow(Vector2.new(0, 0), UDim2.fromScale(0, 0))
-		local gBR = makeGlow(Vector2.new(1, 1), UDim2.fromScale(1, 1))
-		local gTR = makeGlow(Vector2.new(1, 0), UDim2.fromScale(1, 0))
-		task.spawn(function()
-			local t0 = os.clock()
-			while WindowFrame and WindowFrame.Parent do
-				local t = os.clock() - t0
-				local flicker = 0.84 + math.sin(t * 1.7) * 0.04 + math.sin(t * 3.1) * 0.02
-				flicker = math.clamp(flicker, 0.78, 0.92)
-				pcall(function()
-					gTL.BackgroundTransparency = flicker
-					gBR.BackgroundTransparency = flicker + 0.02
-					gTR.BackgroundTransparency = flicker + 0.01
-					local a = NeverLose.AccentColor or accent
-					gTL.BackgroundColor3 = a
-					gBR.BackgroundColor3 = a
-					gTR.BackgroundColor3 = a
-				end)
-				task.wait(0.05)
+
+		local function makePlus(anchor, pos)
+			local holder = Instance.new("Frame")
+			holder.Name = NeverLose.RandomString()
+			holder.AnchorPoint = anchor
+			holder.Position = pos
+			holder.Size = UDim2.fromOffset(14, 14)
+			holder.BackgroundTransparency = 1
+			holder.ZIndex = 3
+			holder.Parent = WindowFrame
+			local h = Instance.new("Frame")
+			h.AnchorPoint = Vector2.new(0.5, 0.5)
+			h.Position = UDim2.fromScale(0.5, 0.5)
+			h.Size = UDim2.fromOffset(10, 1)
+			h.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			h.BackgroundTransparency = 0.82
+			h.BorderSizePixel = 0
+			h.ZIndex = 3
+			h.Parent = holder
+			local v = Instance.new("Frame")
+			v.AnchorPoint = Vector2.new(0.5, 0.5)
+			v.Position = UDim2.fromScale(0.5, 0.5)
+			v.Size = UDim2.fromOffset(1, 10)
+			v.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			v.BackgroundTransparency = 0.82
+			v.BorderSizePixel = 0
+			v.ZIndex = 3
+			v.Parent = holder
+			return holder, h, v
+		end
+
+		local defs = {
+			{ Vector2.new(0, 0), UDim2.fromScale(0, 0), UDim2.new(0, 10, 0, 10) },
+			{ Vector2.new(1, 0), UDim2.fromScale(1, 0), UDim2.new(1, -10, 0, 10) },
+			{ Vector2.new(0, 1), UDim2.fromScale(0, 1), UDim2.new(0, 10, 1, -10) },
+			{ Vector2.new(1, 1), UDim2.fromScale(1, 1), UDim2.new(1, -10, 1, -10) },
+		}
+		for i = 1, 4 do
+			local d = defs[i]
+			local holder, h, v = makePlus(d[1], d[3])
+			corners[i] = {
+				glow = makeAmbient(d[1], d[2]),
+				plusHolder = holder,
+				plusH = h,
+				plusV = v,
+			}
+		end
+
+		local function cornerPos(i)
+			local ap = WindowFrame.AbsolutePosition
+			local as = WindowFrame.AbsoluteSize
+			if i == 1 then return Vector2.new(ap.X, ap.Y)
+			elseif i == 2 then return Vector2.new(ap.X + as.X, ap.Y)
+			elseif i == 3 then return Vector2.new(ap.X, ap.Y + as.Y)
+			else return Vector2.new(ap.X + as.X, ap.Y + as.Y) end
+		end
+
+		NeverLose:AddSignal(UserInputService.InputChanged:Connect(function(input)
+			if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+			if not WindowFrame.Parent or not WindowFrame.Visible then return end
+			local mp = UserInputService:GetMouseLocation()
+			local a = NeverLose.AccentColor or accent
+			for i = 1, 4 do
+				local c = corners[i]
+				if c and c.glow then
+					local dist = (mp - cornerPos(i)).Magnitude
+					local t = math.clamp(dist / 220, 0, 1)
+					local glowT = 0.91 + t * 0.06
+					local plusT = 0.35 + t * 0.5
+					pcall(function()
+						c.glow.BackgroundColor3 = a
+						c.glow.BackgroundTransparency = glowT
+						if c.plusH then
+							c.plusH.BackgroundTransparency = plusT
+							c.plusV.BackgroundTransparency = plusT
+							c.plusH.BackgroundColor3 = Color3.fromRGB(255, 255, 255):Lerp(a, 1 - t)
+							c.plusV.BackgroundColor3 = Color3.fromRGB(255, 255, 255):Lerp(a, 1 - t)
+						end
+					end)
+				end
 			end
-		end)
+		end))
 	end;
 
 	local renderParentWindow = LPH_NO_VIRTUALIZE(function()
@@ -4112,7 +4175,7 @@ function NeverLose:CreateWindow(Config)
 			})
 
 			NeverLose.PlayAnimate(RightMenuFrame , SlowyTween , {
-				BackgroundTransparency = 0.600
+				BackgroundTransparency = 0.12
 			})
 
 			NeverLose.PlayAnimate(UIStroke , SlowyTween , {
@@ -4392,8 +4455,8 @@ function NeverLose:CreateWindow(Config)
 	BottomFrame.Name = NeverLose.RandomString();
 	BottomFrame.Parent = LeftMenuFrame
 	BottomFrame.AnchorPoint = Vector2.new(0, 1)
-	BottomFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	BottomFrame.BackgroundTransparency = 1.000
+	BottomFrame.BackgroundColor3 = NeverLose.TabListColor or Color3.fromRGB(16, 16, 16) -- match sidebar #101010
+	BottomFrame.BackgroundTransparency = 0
 	BottomFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	BottomFrame.BorderSizePixel = 0
 	BottomFrame.Position = UDim2.new(0, 0, 1, 0)
@@ -4489,7 +4552,7 @@ function NeverLose:CreateWindow(Config)
 	RightMenuFrame.Name = NeverLose.RandomString();
 	RightMenuFrame.Parent = WindowFrame
 	RightMenuFrame.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
-	RightMenuFrame.BackgroundTransparency = 0.15
+	RightMenuFrame.BackgroundTransparency = 0.12
 	RightMenuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	RightMenuFrame.BorderSizePixel = 0
 	RightMenuFrame.ClipsDescendants = true
@@ -5541,7 +5604,7 @@ function NeverLose:CreateWindow(Config)
 			SectionHandler.Parent = SectionFrame
 			SectionHandler.AnchorPoint = Vector2.new(0.5, 0)
 			SectionHandler.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
-			SectionHandler.BackgroundTransparency = 0.25
+			SectionHandler.BackgroundTransparency = 0.2
 			SectionHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionHandler.BorderSizePixel = 0
 			SectionHandler.ClipsDescendants = true
@@ -5583,7 +5646,7 @@ function NeverLose:CreateWindow(Config)
 					})
 
 					NeverLose.PlayAnimate(SectionHandler,SlowyTween,{
-						BackgroundTransparency = 0.500
+						BackgroundTransparency = 0.2
 					})
 
 					NeverLose.PlayAnimate(UIStroke,SlowyTween,{
