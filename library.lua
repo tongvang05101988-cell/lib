@@ -200,7 +200,8 @@ NeverLose.ScreenGui = GlobalWindow;
 NeverLose.Flags = {};
 NeverLose.AccentColor = Color3.fromRGB(245, 92, 176); -- zovii.vip pink
 NeverLose.SectionAccent = Color3.fromRGB(245, 92, 176); -- same pink for section controls
-NeverLose.MainColor = Color3.fromRGB(8, 8, 13);
+NeverLose.MainColor = Color3.fromRGB(17, 17, 17); -- #111111 main window / sections
+NeverLose.TabListColor = Color3.fromRGB(16, 16, 16); -- #101010 tab list sidebar
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
 NeverLose.IsMosueOverOtherFrame = false;
@@ -3978,8 +3979,8 @@ function NeverLose:CreateWindow(Config)
 	WindowFrame.Name = NeverLose.RandomString();
 	WindowFrame.Parent = NeverLose.ScreenGui;
 	WindowFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	WindowFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 13)
-	WindowFrame.BackgroundTransparency = 0.055
+	WindowFrame.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
+	WindowFrame.BackgroundTransparency = 0.02
 	WindowFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	WindowFrame.BorderSizePixel = 0
 	WindowFrame.ClipsDescendants = true
@@ -3988,7 +3989,54 @@ function NeverLose:CreateWindow(Config)
 	WindowFrame.Active = true;
 
 	if not NeverLose.EnabledBlur then
-		WindowFrame.BackgroundTransparency = 0.0255
+		WindowFrame.BackgroundTransparency = 0.01
+	end;
+
+	-- Corner ambient glow / soft flicker (accent-tinted)
+	do
+		local accent = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
+		local function makeGlow(anchor, pos)
+			local glow = Instance.new("Frame")
+			glow.Name = NeverLose.RandomString()
+			glow.AnchorPoint = anchor
+			glow.Position = pos
+			glow.Size = UDim2.fromOffset(220, 220)
+			glow.BackgroundColor3 = accent
+			glow.BackgroundTransparency = 0.88
+			glow.BorderSizePixel = 0
+			glow.ZIndex = 1
+			glow.Parent = WindowFrame
+			Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0)
+			local grad = Instance.new("UIGradient")
+			grad.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.25),
+				NumberSequenceKeypoint.new(0.55, 0.75),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			grad.Parent = glow
+			return glow
+		end
+		local gTL = makeGlow(Vector2.new(0, 0), UDim2.fromScale(0, 0))
+		local gBR = makeGlow(Vector2.new(1, 1), UDim2.fromScale(1, 1))
+		local gTR = makeGlow(Vector2.new(1, 0), UDim2.fromScale(1, 0))
+		task.spawn(function()
+			local t0 = os.clock()
+			while WindowFrame and WindowFrame.Parent do
+				local t = os.clock() - t0
+				local flicker = 0.84 + math.sin(t * 1.7) * 0.04 + math.sin(t * 3.1) * 0.02
+				flicker = math.clamp(flicker, 0.78, 0.92)
+				pcall(function()
+					gTL.BackgroundTransparency = flicker
+					gBR.BackgroundTransparency = flicker + 0.02
+					gTR.BackgroundTransparency = flicker + 0.01
+					local a = NeverLose.AccentColor or accent
+					gTL.BackgroundColor3 = a
+					gBR.BackgroundColor3 = a
+					gTR.BackgroundColor3 = a
+				end)
+				task.wait(0.05)
+			end
+		end)
 	end;
 
 	local renderParentWindow = LPH_NO_VIRTUALIZE(function()
@@ -4233,11 +4281,12 @@ function NeverLose:CreateWindow(Config)
 
 	LeftMenuFrame.Name = NeverLose.RandomString();
 	LeftMenuFrame.Parent = WindowFrame
-	LeftMenuFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	LeftMenuFrame.BackgroundTransparency = 1.000
+	LeftMenuFrame.BackgroundColor3 = NeverLose.TabListColor or Color3.fromRGB(16, 16, 16) -- #101010
+	LeftMenuFrame.BackgroundTransparency = 0
 	LeftMenuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	LeftMenuFrame.BorderSizePixel = 0
 	LeftMenuFrame.Size = UDim2.new(0, 175, 1, 0)
+	LeftMenuFrame.ZIndex = 2
 
 	HeadFrame.Name = NeverLose.RandomString();
 	HeadFrame.Parent = LeftMenuFrame
@@ -4439,8 +4488,8 @@ function NeverLose:CreateWindow(Config)
 
 	RightMenuFrame.Name = NeverLose.RandomString();
 	RightMenuFrame.Parent = WindowFrame
-	RightMenuFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 13)
-	RightMenuFrame.BackgroundTransparency = 0.600
+	RightMenuFrame.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
+	RightMenuFrame.BackgroundTransparency = 0.15
 	RightMenuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	RightMenuFrame.BorderSizePixel = 0
 	RightMenuFrame.ClipsDescendants = true
@@ -5491,8 +5540,8 @@ function NeverLose:CreateWindow(Config)
 			SectionHandler.Name = NeverLose.RandomString();
 			SectionHandler.Parent = SectionFrame
 			SectionHandler.AnchorPoint = Vector2.new(0.5, 0)
-			SectionHandler.BackgroundColor3 = Color3.fromRGB(20, 22, 27)
-			SectionHandler.BackgroundTransparency = 0.500
+			SectionHandler.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17) -- #111111
+			SectionHandler.BackgroundTransparency = 0.25
 			SectionHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionHandler.BorderSizePixel = 0
 			SectionHandler.ClipsDescendants = true
