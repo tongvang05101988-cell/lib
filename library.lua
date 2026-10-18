@@ -189,11 +189,40 @@ GlobalWindow.ResetOnSpawn = false;
 GlobalWindow.Parent = CoreGui;
 
 NeverLose.Scales = {
-	Small = UDim2.fromOffset(540,380),
-	Mobile = UDim2.fromOffset(640,385),
-	Default = UDim2.fromOffset(640 , 480),
-	Large = UDim2.fromOffset(800 , 600)
+	Small = UDim2.fromOffset(480, 340),
+	Mobile = UDim2.fromOffset(520, 360),
+	Default = UDim2.fromOffset(640, 480),
+	Large = UDim2.fromOffset(800, 600)
 };
+
+-- Responsive scale for small / mobile screens (Delta etc.)
+NeverLose.GetViewport = function()
+	local cam = workspace.CurrentCamera
+	if cam then
+		return cam.ViewportSize
+	end
+	return Vector2.new(800, 600)
+end
+
+NeverLose.DetectMobile = function()
+	local vs = NeverLose.GetViewport()
+	local touch = UserInputService.TouchEnabled
+	-- treat as mobile UI when touch is on OR viewport is phone/tablet sized
+	return touch or vs.X < 900 or vs.Y < 650
+end
+
+NeverLose.ComputeUIScale = function(baseW, baseH)
+	baseW = baseW or 640
+	baseH = baseH or 480
+	local vs = NeverLose.GetViewport()
+	local marginX, marginY = 0.94, 0.80
+	local scale = math.min((vs.X * marginX) / baseW, (vs.Y * marginY) / baseH, 1)
+	if NeverLose.DetectMobile() then
+		-- keep usable but fully on-screen
+		scale = math.clamp(scale, 0.50, 0.82)
+	end
+	return scale
+end
 
 NeverLose.IconColor = Color3.fromRGB(255, 255, 255);
 NeverLose.ScreenGui = GlobalWindow;
@@ -898,7 +927,7 @@ function NeverLose:MoreThanHalfY(Value: number)
 end;
 
 NeverLose.IsStudio = RunService:IsStudio();
-NeverLose.IsMobile = UserInputService.TouchEnabled;
+NeverLose.IsMobile = NeverLose.DetectMobile();
 
 NeverLose.CreateInput = LPH_NO_VIRTUALIZE(function(self , Frame , Callback)
 	local Button = Instance.new('ImageButton',Frame);
@@ -3985,8 +4014,38 @@ function NeverLose:CreateWindow(Config)
 	WindowFrame.BorderSizePixel = 0
 	WindowFrame.ClipsDescendants = true
 	WindowFrame.Position = UDim2.new(255, 0, 255, 0)
+	-- Mobile / small screen: pick a tighter base size then UIScale everything evenly
+	do
+		NeverLose.IsMobile = NeverLose.DetectMobile()
+		if NeverLose.IsMobile then
+			local cfgSize = Window.Size
+			local tooBig = (cfgSize.X.Offset or 0) >= 600 or (cfgSize.Y.Offset or 0) >= 440
+			if tooBig then
+				Window.Size = NeverLose.Scales.Mobile
+			end
+		end
+	end
+
 	WindowFrame.Size = Window.Size
 	WindowFrame.Active = true;
+
+	-- Uniform scale so toggles/sliders/sections all shrink together (no overlap)
+	local WindowUIScale = Instance.new("UIScale")
+	WindowUIScale.Name = "MobileUIScale"
+	WindowUIScale.Parent = WindowFrame
+	local function refreshWindowScale()
+		local bw = Window.Size.X.Offset > 0 and Window.Size.X.Offset or 640
+		local bh = Window.Size.Y.Offset > 0 and Window.Size.Y.Offset or 480
+		WindowUIScale.Scale = NeverLose.ComputeUIScale(bw, bh)
+	end
+	refreshWindowScale()
+	Window._UIScale = WindowUIScale
+	Window._RefreshScale = refreshWindowScale
+	pcall(function()
+		if workspace.CurrentCamera then
+			NeverLose:AddSignal(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(refreshWindowScale))
+		end
+	end)
 
 	if not NeverLose.EnabledBlur then
 		WindowFrame.BackgroundTransparency = 0.01
@@ -6484,6 +6543,9 @@ function NeverLose:CreateWindow(Config)
 				Size = Window.Size
 			})
 		end
+		if Window._RefreshScale then
+			pcall(Window._RefreshScale)
+		end
 	end;
 
 	Window:SetAccount();
@@ -6503,6 +6565,94 @@ function NeverLose:CreateWindow(Config)
 			Window.Load3DBlock();
 		end;
 	end;
+
+	-- ========== MOBILE FLOATING TOGGLE (draggable) ==========
+	do
+		local showMobileBtn = NeverLose.DetectMobile() or UserInputService.TouchEnabled
+		if showMobileBtn then
+			local btnSize = 52
+			local MobileBtn = Instance.new("ImageButton")
+			MobileBtn.Name = "ZoviiMobileToggle"
+			MobileBtn.Size = UDim2.fromOffset(btnSize, btnSize)
+			MobileBtn.Position = UDim2.new(1, -btnSize - 14, 1, -btnSize - 24)
+			MobileBtn.AnchorPoint = Vector2.new(0, 0)
+			MobileBtn.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17)
+			MobileBtn.BackgroundTransparency = 0.05
+			MobileBtn.BorderSizePixel = 0
+			MobileBtn.AutoButtonColor = false
+			MobileBtn.Image = ""
+			MobileBtn.ZIndex = 200
+			MobileBtn.Active = true
+			MobileBtn.Parent = NeverLose.ScreenGui
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 12)
+			corner.Parent = MobileBtn
+
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
+			stroke.Thickness = 1.5
+			stroke.Transparency = 0.15
+			stroke.Parent = MobileBtn
+
+			local icon = Instance.new("ImageLabel")
+			icon.Name = "Icon"
+			icon.BackgroundTransparency = 1
+			icon.Size = UDim2.fromScale(0.62, 0.62)
+			icon.Position = UDim2.fromScale(0.5, 0.5)
+			icon.AnchorPoint = Vector2.new(0.5, 0.5)
+			icon.Image = (Window.Logo and Window.Logo ~= "") and Window.Logo or (NeverLose.GlobalLogo or "")
+			icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+			icon.ScaleType = Enum.ScaleType.Fit
+			icon.ZIndex = 201
+			icon.Parent = MobileBtn
+
+			-- subtle accent glow ring
+			local glow = Instance.new("UIStroke")
+			-- already have stroke on button
+
+			local dragging = false
+			local dragMoved = false
+			local dragStart, startPos
+
+			NeverLose:AddSignal(MobileBtn.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch then
+					dragging = true
+					dragMoved = false
+					dragStart = input.Position
+					startPos = MobileBtn.Position
+					local ended
+					ended = input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragging = false
+							if not dragMoved then
+								Window:ToggleInterface()
+							end
+							ended:Disconnect()
+						end
+					end)
+				end
+			end))
+
+			NeverLose:AddSignal(UserInputService.InputChanged:Connect(function(input)
+				if not dragging then return end
+				if input.UserInputType == Enum.UserInputType.MouseMovement
+					or input.UserInputType == Enum.UserInputType.Touch then
+					local delta = input.Position - dragStart
+					if math.abs(delta.X) > 6 or math.abs(delta.Y) > 6 then
+						dragMoved = true
+					end
+					MobileBtn.Position = UDim2.new(
+						startPos.X.Scale, startPos.X.Offset + delta.X,
+						startPos.Y.Scale, startPos.Y.Offset + delta.Y
+					)
+				end
+			end))
+
+			Window.MobileButton = MobileBtn
+		end
+	end
 
 	function Window:Watermark()
 		if NeverLose.__WatermarkCache then
