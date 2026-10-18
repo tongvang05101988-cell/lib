@@ -839,24 +839,23 @@ NeverLose.LoadIcon = LPH_NO_VIRTUALIZE(function()
 	};
 end);
 
-NeverLose.IsMouseOverFrame = LPH_NO_VIRTUALIZE(function(self , Frame)
+NeverLose.IsMouseOverFrame = LPH_NO_VIRTUALIZE(function(self , Frame, pos)
 	if not Frame then
-		return;
+		return false;
 	end;
 
 	if NeverLose.Global3DRenderMode then
 		if Frame.GuiState == Enum.GuiState.Hover or Frame.GuiState == Enum.GuiState.Press then
 			return true;
 		end;
-
 		return false;
 	end;
 
 	local AbsPos: Vector2, AbsSize: Vector2 = Frame.AbsolutePosition, Frame.AbsoluteSize;
+	local x = (pos and pos.X) or Mouse.X
+	local y = (pos and pos.Y) or Mouse.Y
 
-	if Mouse.X >= AbsPos.X and Mouse.X <= AbsPos.X + AbsSize.X and Mouse.Y >= AbsPos.Y and Mouse.Y <= AbsPos.Y + AbsSize.Y then
-		return true;
-	end;
+	return x >= AbsPos.X and x <= AbsPos.X + AbsSize.X and y >= AbsPos.Y and y <= AbsPos.Y + AbsSize.Y
 end);
 
 NeverLose.CreateSignal = LPH_NO_VIRTUALIZE(function(self , DefaultValue)
@@ -923,12 +922,22 @@ NeverLose.CreateInput = LPH_NO_VIRTUALIZE(function(self , Frame , Callback)
 	Button.Size = UDim2.fromScale(1,1);
 	Button.BackgroundTransparency = 1;
 	Button.ImageTransparency = 1;
-	Button.Image = "rbxasset://textuers/translateIcon.png";
+	Button.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png";
+	Button.Active = true;
+	Button.Selectable = true;
 
 	if Callback then
-		local bth_signal = Button.MouseButton1Click:Connect(Callback);
-
-		return Button , bth_signal;
+		-- Activated works for both mouse and touch on mobile executors (Delta)
+		local last = 0
+		local function fire()
+			local now = tick()
+			if now - last < 0.12 then return end -- debounce double fire
+			last = now
+			Callback()
+		end
+		local s1 = Button.Activated:Connect(fire)
+		local s2 = Button.MouseButton1Click:Connect(fire)
+		return Button , s1;
 	end;
 
 	return Button;
@@ -1275,6 +1284,7 @@ function NeverLose:CreateOptionWindow(Frame: Frame , Zindex)
 	OptionHandler.Position = UDim2.new(255,255,255,255)
 	OptionHandler.Size = UDim2.new(0, 220, 0, 75)
 	OptionHandler.ZIndex = Zindex + 9
+	OptionHandler.Active = true
 
 	UICorner.CornerRadius = UDim.new(0, 3)
 	UICorner.Parent = OptionHandler
@@ -1288,8 +1298,22 @@ function NeverLose:CreateOptionWindow(Frame: Frame , Zindex)
 	UIStroke.Parent = OptionHandler
 
 	NeverLose:AddSignal(UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(function()
+		local h = UIListLayout.AbsoluteContentSize.Y
+		-- AbsoluteContentSize is scaled under UIScale — convert back for Size offset
+		local scale = 1
+		pcall(function()
+			local cam = workspace.CurrentCamera
+			-- find any MobileUIScale under ScreenGui
+			for _, d in ipairs(NeverLose.ScreenGui:GetDescendants()) do
+				if d:IsA("UIScale") and d.Name == "MobileUIScale" and d.Scale > 0.01 then
+					scale = d.Scale
+					break
+				end
+			end
+		end)
+		local unscaled = math.max((h / scale) - 1, 40)
 		NeverLose.PlayAnimate(OptionHandler , SlowyTween , {
-			Size = UDim2.new(0, 220, 0, UIListLayout.AbsoluteContentSize.Y - 1)
+			Size = UDim2.new(0, 220, 0, unscaled)
 		})
 	end)));
 
@@ -1318,7 +1342,17 @@ function NeverLose:CreateOptionWindow(Frame: Frame , Zindex)
 			OptionHandler.AnchorPoint = Vector2.new(0,0)
 		end;
 
-		OptionHandler.Position = UDim2.fromOffset(Frame.AbsolutePosition.X + 18 , Frame.AbsolutePosition.Y + 65);
+		local px = Frame.AbsolutePosition.X + 18
+		local py = Frame.AbsolutePosition.Y + 65
+		-- keep popup fully on-screen (mobile / small viewports)
+		local vs = NeverLose.GetViewport and NeverLose.GetViewport() or Vector2.new(800, 600)
+		local ow = OptionHandler.AbsoluteSize.X
+		local oh = OptionHandler.AbsoluteSize.Y
+		if ow < 10 then ow = 220 end
+		if oh < 10 then oh = 75 end
+		px = math.clamp(px, 8, math.max(8, vs.X - ow - 8))
+		py = math.clamp(py, 8, math.max(8, vs.Y - oh - 8))
+		OptionHandler.Position = UDim2.fromOffset(px, py);
 	end);
 
 	Window.SetRender = LPH_NO_VIRTUALIZE(function(value)
@@ -2180,6 +2214,11 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 		local IsHold = false;
 
 		do
+			-- taller hit area on mobile so fingers can grab the track
+			if UserInputService.TouchEnabled then
+				SlideMain.Size = UDim2.new(1, -((SliderLib.MaximumSize + 11)), 0, 28)
+			end
+
 			SlideMain.InputBegan:Connect(LPH_NO_VIRTUALIZE(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
 					IsHold = true
@@ -2187,32 +2226,24 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 				end
 			end))
 
+			-- always release on end (old mobile path refused to release / cancelled mid-drag)
 			SlideMain.InputEnded:Connect(LPH_NO_VIRTUALIZE(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					if UserInputService.TouchEnabled then
-						if not NeverLose:IsMouseOverFrame(SlideMain) then
-							IsHold = false
-						end;
-					else
-						IsHold = false
-					end;
+					IsHold = false
+				end
+			end))
+
+			UserInputService.InputEnded:Connect(LPH_NO_VIRTUALIZE(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					IsHold = false
 				end
 			end))
 
 			UserInputService.InputChanged:Connect(LPH_NO_VIRTUALIZE(function(Input)
-				if IsHold then
-					if (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch)  then
-						if UserInputService.TouchEnabled then
-							if not NeverLose:IsMouseOverFrame(SlideMain) then
-								IsHold = false
-							else
-								Update(Input)
-							end;
-						else
-							Update(Input)
-						end;
-					end;
-				end;
+				if not IsHold then return end
+				if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+					Update(Input) -- keep dragging even if finger drifts slightly off the thin track
+				end
 			end));
 		end;
 
@@ -2304,17 +2335,21 @@ function NeverLose:RegisiterHandler(Handler: Frame , Signal)
 
 			Window.Signal:SetValue(true);
 
-			reciveSignal = UserInputService.InputBegan:Connect(function(Input)
-				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-					if not NeverLose:IsMouseOverFrame(Window.Root) and not NeverLose:IsMouseOverFrame(Option) then
-						if reciveSignal then
-							reciveSignal:Disconnect();
-							reciveSignal = nil;	
-						end;
-
-						Window.Signal:SetValue(false);
+			-- delay so the same tap that opened does not instantly close
+			task.delay(0.05, function()
+				if reciveSignal then reciveSignal:Disconnect() end
+				reciveSignal = UserInputService.InputBegan:Connect(function(Input)
+					if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+						local pos = Input.Position
+						if not NeverLose:IsMouseOverFrame(Window.Root, pos) and not NeverLose:IsMouseOverFrame(Option, pos) then
+							if reciveSignal then
+								reciveSignal:Disconnect();
+								reciveSignal = nil;	
+							end;
+							Window.Signal:SetValue(false);
+						end
 					end
-				end
+				end)
 			end)
 		end));
 
