@@ -237,6 +237,7 @@ NeverLose.IsMosueOverOtherFrame = false;
 NeverLose.GlobalLogo = "rbxassetid://120358385035996";
 NeverLose.ImageColorMapping = "rbxassetid://4155801252";
 
+-- Color mapping asset only (do NOT overwrite GlobalLogo with NeverLose branding)
 if getcustomasset then
 	local link = "https://github.com/4lpaca-pin/NeverLose/blob/main/assets/%s?raw=true";
 	local dir = 'NLAssets';
@@ -246,22 +247,8 @@ if getcustomasset then
 	end;
 
 	pcall(function()
-		if not isfile(dir..'/'..'logo.png') then
-			local byte = game:HttpGet(string.format(link,'logo.png'));
-
-			writefile(dir..'/'..'logo.png' , byte);
-			task.wait();
-		end;
-
-		if isfile(dir..'/'..'logo.png') then
-			NeverLose.GlobalLogo = getcustomasset(dir..'/'..'logo.png')
-		end;
-	end);
-
-	pcall(function()
 		if not isfile(dir..'/'..'saturation_value_gradient.png') then
 			local byte = game:HttpGet(string.format(link,'saturation_value_gradient.png'));
-
 			writefile(dir..'/'..'saturation_value_gradient.png' , byte);
 			task.wait();
 		end;
@@ -5632,8 +5619,9 @@ function NeverLose:CreateWindow(Config)
 			SectionFrame.BackgroundTransparency = 1.000
 			SectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionFrame.BorderSizePixel = 0
-			SectionFrame.ClipsDescendants = true
+			SectionFrame.ClipsDescendants = false
 			SectionFrame.Size = UDim2.new(1, -5, 0, 0)
+			SectionFrame.AutomaticSize = Enum.AutomaticSize.Y
 			SectionFrame.ZIndex = 9
 
 			SectionLabel.Name = NeverLose.RandomString();
@@ -5660,9 +5648,10 @@ function NeverLose:CreateWindow(Config)
 			SectionHandler.BackgroundTransparency = 0
 			SectionHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionHandler.BorderSizePixel = 0
-			SectionHandler.ClipsDescendants = true
+			SectionHandler.ClipsDescendants = false
 			SectionHandler.Position = UDim2.new(0.5, 0, 0, 20)
-			SectionHandler.Size = UDim2.new(1, -10, 1, -21)
+			SectionHandler.Size = UDim2.new(1, -10, 0, 0)
+			SectionHandler.AutomaticSize = Enum.AutomaticSize.Y
 			SectionHandler.ZIndex = 9
 
 			UIStroke.Transparency = 0.650
@@ -5672,22 +5661,25 @@ function NeverLose:CreateWindow(Config)
 			UICorner.CornerRadius = UDim.new(0, 3)
 			UICorner.Parent = SectionHandler
 
+			-- padding so toggles/sliders aren't flush against edges
+			local SectionPad = Instance.new("UIPadding")
+			SectionPad.PaddingTop = UDim.new(0, 6)
+			SectionPad.PaddingBottom = UDim.new(0, 6)
+			SectionPad.PaddingLeft = UDim.new(0, 4)
+			SectionPad.PaddingRight = UDim.new(0, 4)
+			SectionPad.Parent = SectionHandler
+
 			UIListLayout.Parent = SectionHandler
 			UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout.Padding = UDim.new(0, 2)
 
+			-- AbsoluteContentSize under UIScale is scaled — AutomaticSize avoids wrong tiny heights
 			UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(function()
-
-
+				-- keep a minimum height so empty sections don't collapse weirdly
 				if UIListLayout.AbsoluteContentSize.Y <= 1 then
-					NeverLose.PlayAnimate(SectionFrame , VSlowTween , {
-						Size = UDim2.new(1, -5, 0, 0)
-					})
-				else
-					NeverLose.PlayAnimate(SectionFrame , VSlowTween , {
-						Size = UDim2.new(1, -5, 0, UIListLayout.AbsoluteContentSize.Y + 19.5)
-					})
-				end;
+					SectionHandler.Size = UDim2.new(1, -10, 0, 0)
+				end
 			end));
 
 			local Section = NeverLose:RegisiterItem(SectionHandler , Tab.Signal);
@@ -6576,8 +6568,9 @@ function NeverLose:CreateWindow(Config)
 			MobileBtn.Size = UDim2.fromOffset(btnSize, btnSize)
 			MobileBtn.Position = UDim2.new(1, -btnSize - 14, 1, -btnSize - 24)
 			MobileBtn.AnchorPoint = Vector2.new(0, 0)
+			-- Match main window fill (solid, not see-through)
 			MobileBtn.BackgroundColor3 = NeverLose.MainColor or Color3.fromRGB(17, 17, 17)
-			MobileBtn.BackgroundTransparency = 0.05
+			MobileBtn.BackgroundTransparency = 0
 			MobileBtn.BorderSizePixel = 0
 			MobileBtn.AutoButtonColor = false
 			MobileBtn.Image = ""
@@ -6589,27 +6582,27 @@ function NeverLose:CreateWindow(Config)
 			corner.CornerRadius = UDim.new(0, 12)
 			corner.Parent = MobileBtn
 
+			-- Same grey outline as section cards / window strokes (NOT pink accent)
 			local stroke = Instance.new("UIStroke")
-			stroke.Color = NeverLose.AccentColor or Color3.fromRGB(245, 92, 176)
-			stroke.Thickness = 1.5
-			stroke.Transparency = 0.15
+			stroke.Color = Color3.fromRGB(45, 48, 58)
+			stroke.Thickness = 1.25
+			stroke.Transparency = 0.35
 			stroke.Parent = MobileBtn
 
 			local icon = Instance.new("ImageLabel")
 			icon.Name = "Icon"
 			icon.BackgroundTransparency = 1
-			icon.Size = UDim2.fromScale(0.62, 0.62)
+			icon.Size = UDim2.fromScale(0.68, 0.68)
 			icon.Position = UDim2.fromScale(0.5, 0.5)
 			icon.AnchorPoint = Vector2.new(0.5, 0.5)
-			icon.Image = (Window.Logo and Window.Logo ~= "") and Window.Logo or (NeverLose.GlobalLogo or "")
+			-- Prefer window logo, then library GlobalLogo (zovii) — never NeverLose branding
+			icon.Image = (Window.Logo and Window.Logo ~= "" and Window.Logo)
+				or (NeverLose.GlobalLogo and NeverLose.GlobalLogo ~= "" and NeverLose.GlobalLogo)
+				or "rbxassetid://120358385035996"
 			icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 			icon.ScaleType = Enum.ScaleType.Fit
 			icon.ZIndex = 201
 			icon.Parent = MobileBtn
-
-			-- subtle accent glow ring
-			local glow = Instance.new("UIStroke")
-			-- already have stroke on button
 
 			local dragging = false
 			local dragMoved = false
