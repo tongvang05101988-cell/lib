@@ -234,7 +234,7 @@ NeverLose.TabListColor = Color3.fromRGB(16, 16, 16); -- #101010 tab list
 NeverLose.RegisiteryColor = {};
 NeverLose.NameRegisitry = {};
 NeverLose.IsMosueOverOtherFrame = false;
-NeverLose.GlobalLogo = "rbxassetid://120358385035996";
+NeverLose.GlobalLogo = "rbxassetid://122622770180872"; -- zovii logo
 NeverLose.ImageColorMapping = "rbxassetid://4155801252";
 
 -- Color mapping asset only (do NOT overwrite GlobalLogo with NeverLose branding)
@@ -3508,7 +3508,8 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		BasedLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BasedLabel.BorderSizePixel = 0
 		BasedLabel.Position = UDim2.new(0, 11, 0, 6)
-		BasedLabel.Size = UDim2.new(0,1, 0, 15)
+		-- leave room on the right for gear / keybind / toggle so text never overlaps
+		BasedLabel.Size = UDim2.new(1, -115, 0, 18)
 		BasedLabel.ZIndex = LayerIndex + 9
 		BasedLabel.Font = Enum.Font.GothamMedium
 		BasedLabel.Text = Name
@@ -3516,6 +3517,8 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		BasedLabel.TextSize = 13.000
 		BasedLabel.TextTransparency = 0.35
 		BasedLabel.TextXAlignment = Enum.TextXAlignment.Left
+		BasedLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		BasedLabel.ClipsDescendants = true
 
 		LineFrame.Name = NeverLose.RandomString();
 		LineFrame.Parent = BasedFrame
@@ -3536,7 +3539,9 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 		BasedHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BasedHandler.BorderSizePixel = 0
 		BasedHandler.Position = UDim2.new(1, -11, 0, 2)
-		BasedHandler.Size = UDim2.new(1, -20, 0, 25)
+		-- only as wide as the controls (not full row) so labels don't sit under them
+		BasedHandler.Size = UDim2.new(0, 0, 0, 25)
+		BasedHandler.AutomaticSize = Enum.AutomaticSize.X
 		BasedHandler.ZIndex = LayerIndex + 12
 
 		UIListLayout.Parent = BasedHandler
@@ -3555,7 +3560,7 @@ function NeverLose:RegisiterItem(Frame: Frame , Signel)
 				Size = UDim2.new(1, 0, 0, size.Y + 13);
 			})
 
-			BasedLabel.Size = UDim2.new(1, -35, 1, 0)
+			BasedLabel.Size = UDim2.new(1, -115, 1, 0)
 			BasedLabel.TextYAlignment = Enum.TextYAlignment.Top;
 		end);
 
@@ -6597,7 +6602,7 @@ function NeverLose:CreateWindow(Config)
 			-- Prefer window logo, then library GlobalLogo (zovii) — never NeverLose branding
 			icon.Image = (Window.Logo and Window.Logo ~= "" and Window.Logo)
 				or (NeverLose.GlobalLogo and NeverLose.GlobalLogo ~= "" and NeverLose.GlobalLogo)
-				or "rbxassetid://120358385035996"
+				or "rbxassetid://122622770180872"
 			icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 			icon.ScaleType = Enum.ScaleType.Fit
 			icon.ZIndex = 201
