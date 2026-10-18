@@ -5619,9 +5619,8 @@ function NeverLose:CreateWindow(Config)
 			SectionFrame.BackgroundTransparency = 1.000
 			SectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionFrame.BorderSizePixel = 0
-			SectionFrame.ClipsDescendants = false
+			SectionFrame.ClipsDescendants = true
 			SectionFrame.Size = UDim2.new(1, -5, 0, 0)
-			SectionFrame.AutomaticSize = Enum.AutomaticSize.Y
 			SectionFrame.ZIndex = 9
 
 			SectionLabel.Name = NeverLose.RandomString();
@@ -5648,10 +5647,9 @@ function NeverLose:CreateWindow(Config)
 			SectionHandler.BackgroundTransparency = 0
 			SectionHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			SectionHandler.BorderSizePixel = 0
-			SectionHandler.ClipsDescendants = false
+			SectionHandler.ClipsDescendants = true
 			SectionHandler.Position = UDim2.new(0.5, 0, 0, 20)
-			SectionHandler.Size = UDim2.new(1, -10, 0, 0)
-			SectionHandler.AutomaticSize = Enum.AutomaticSize.Y
+			SectionHandler.Size = UDim2.new(1, -10, 1, -21)
 			SectionHandler.ZIndex = 9
 
 			UIStroke.Transparency = 0.650
@@ -5661,26 +5659,27 @@ function NeverLose:CreateWindow(Config)
 			UICorner.CornerRadius = UDim.new(0, 3)
 			UICorner.Parent = SectionHandler
 
-			-- padding so toggles/sliders aren't flush against edges
-			local SectionPad = Instance.new("UIPadding")
-			SectionPad.PaddingTop = UDim.new(0, 6)
-			SectionPad.PaddingBottom = UDim.new(0, 6)
-			SectionPad.PaddingLeft = UDim.new(0, 4)
-			SectionPad.PaddingRight = UDim.new(0, 4)
-			SectionPad.Parent = SectionHandler
-
 			UIListLayout.Parent = SectionHandler
 			UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			UIListLayout.Padding = UDim.new(0, 2)
 
-			-- AbsoluteContentSize under UIScale is scaled — AutomaticSize avoids wrong tiny heights
-			UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(function()
-				-- keep a minimum height so empty sections don't collapse weirdly
-				if UIListLayout.AbsoluteContentSize.Y <= 1 then
-					SectionHandler.Size = UDim2.new(1, -10, 0, 0)
+			-- Hug content tightly. AbsoluteContentSize is scaled under UIScale — divide back out.
+			local function fitSectionHeight()
+				local contentY = UIListLayout.AbsoluteContentSize.Y
+				if contentY <= 1 then
+					SectionFrame.Size = UDim2.new(1, -5, 0, 0)
+					return
 				end
-			end));
+				local scale = 1
+				if Window._UIScale and Window._UIScale.Scale and Window._UIScale.Scale > 0.01 then
+					scale = Window._UIScale.Scale
+				end
+				-- label (15) + gap (5) + content in unscaled units
+				local h = (contentY / scale) + 20
+				SectionFrame.Size = UDim2.new(1, -5, 0, h)
+			end
+			UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(LPH_NO_VIRTUALIZE(fitSectionHeight))
+			task.defer(fitSectionHeight)
 
 			local Section = NeverLose:RegisiterItem(SectionHandler , Tab.Signal);
 
